@@ -1,0 +1,12 @@
+{
+  "name": "gastosdiarios",
+  "version": "1.0.0",
+  "description": "Control de gastos personales — sabe en qué se va tu dinero",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve . -p 3000",
+    "preview": "npm start"
+  },
+  "keywords": ["finanzas", "gastos", "presupuesto", "personal-finance"],
+  "license": "MIT"
+}

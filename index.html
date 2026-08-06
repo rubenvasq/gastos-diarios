@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Controla tus gastos diarios, establece presupuestos y descubre en qué se va tu dinero.">
+  <meta name="theme-color" content="#0f766e">
+  <title>GastosDiarios — Control de gastos personales</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo" aria-hidden="true">💰</span>
+        <div>
+          <h1>GastosDiarios</h1>
+          <p class="header__tagline">Sabe en qué se va tu dinero</p>
+        </div>
+      </div>
+      <div class="header__actions">
+        <button type="button" id="btn-export" class="btn btn--ghost" title="Exportar datos">Exportar</button>
+        <button type="button" id="btn-import" class="btn btn--ghost" title="Importar datos">Importar</button>
+        <input type="file" id="import-file" accept=".json" hidden>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="card budget-card" aria-labelledby="budget-title">
+        <div class="budget-card__header">
+          <h2 id="budget-title">Presupuesto mensual</h2>
+          <div class="month-nav">
+            <button type="button" id="btn-prev-month" class="btn btn--icon" aria-label="Mes anterior">‹</button>
+            <span id="current-month" class="month-nav__label"></span>
+            <button type="button" id="btn-next-month" class="btn btn--icon" aria-label="Mes siguiente">›</button>
+          </div>
+        </div>
+
+        <div class="budget-summary">
+          <div class="budget-summary__stat">
+            <span class="budget-summary__label">Gastado</span>
+            <span id="total-spent" class="budget-summary__value">$0.00</span>
+          </div>
+          <div class="budget-summary__stat">
+            <span class="budget-summary__label">Presupuesto</span>
+            <div class="budget-input-wrap">
+              <span class="budget-input-wrap__prefix">$</span>
+              <input type="number" id="budget-input" class="budget-input" min="0" step="50" placeholder="2000">
+            </div>
+          </div>
+          <div class="budget-summary__stat">
+            <span class="budget-summary__label">Disponible</span>
+            <span id="total-remaining" class="budget-summary__value budget-summary__value--positive">$0.00</span>
+          </div>
+        </div>
+
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="budget-progress" class="progress__bar"></div>
+        </div>
+        <p id="budget-alert" class="budget-alert" hidden></p>
+      </section>
+
+      <div class="grid">
+        <section class="card" aria-labelledby="form-title">
+          <h2 id="form-title">Registrar gasto</h2>
+          <form id="expense-form" class="expense-form" novalidate>
+            <div class="form-row">
+              <label for="expense-amount">Monto</label>
+              <div class="input-prefix">
+                <span>$</span>
+                <input type="number" id="expense-amount" name="amount" min="0.01" step="0.01" required placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label for="expense-category">Categoría</label>
+              <select id="expense-category" name="category" required></select>
+            </div>
+
+            <div class="form-row">
+              <label for="expense-description">Descripción</label>
+              <input type="text" id="expense-description" name="description" maxlength="100" placeholder="Ej. Supermercado, Uber…">
+            </div>
+
+            <div class="form-row">
+              <label for="expense-date">Fecha</label>
+              <input type="date" id="expense-date" name="date" required>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--full">Agregar gasto</button>
+          </form>
+        </section>
+
+        <section class="card" aria-labelledby="categories-title">
+          <h2 id="categories-title">Por categoría</h2>
+          <ul id="category-breakdown" class="category-list"></ul>
+          <p id="empty-categories" class="empty-state">Sin gastos este mes.</p>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="history-title">
+        <div class="card__header-row">
+          <h2 id="history-title">Historial</h2>
+          <span id="expense-count" class="badge">0 gastos</span>
+        </div>
+        <ul id="expense-list" class="expense-list"></ul>
+        <p id="empty-expenses" class="empty-state">Aún no has registrado gastos este mes.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Datos guardados localmente en tu navegador · Sin conexión a internet necesaria</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
