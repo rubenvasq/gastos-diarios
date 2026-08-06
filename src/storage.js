@@ -20,7 +20,13 @@ export function loadState() {
 }
 
 export function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch {
+    // Almacenamiento lleno o bloqueado (modo privado, permisos).
+    return false;
+  }
 }
 
 export function exportState(state) {
@@ -40,8 +46,26 @@ export async function importState(file) {
     throw new Error('Archivo inválido: no contiene gastos.');
   }
   return {
-    budget: typeof parsed.budget === 'number' ? parsed.budget : 2000,
-    expenses: parsed.expenses,
+    budget: Number.isFinite(parsed.budget) && parsed.budget >= 0 ? parsed.budget : 2000,
+    expenses: parsed.expenses.map(sanitizeExpense).filter(Boolean),
+  };
+}
+
+// Normaliza un gasto que viene de una fuente no confiable (importación).
+// Descarta los que no tienen un monto válido.
+function sanitizeExpense(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const amount = Number(raw.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+
+  const isValidDate = typeof raw.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date);
+  return {
+    id: typeof raw.id === 'string' && raw.id ? raw.id : crypto.randomUUID(),
+    amount: Math.round(amount * 100) / 100,
+    category: typeof raw.category === 'string' ? raw.category : 'otros',
+    description: typeof raw.description === 'string' ? raw.description.slice(0, 100) : '',
+    date: isValidDate ? raw.date : new Date().toISOString().slice(0, 10),
+    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
   };
 }
 
