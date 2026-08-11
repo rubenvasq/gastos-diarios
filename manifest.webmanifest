@@ -1,0 +1,26 @@
+{
+  "name": "GastosDiarios — Gestión financiera personal",
+  "short_name": "GastosDiarios",
+  "description": "Gestión financiera personal: cuentas, movimientos, presupuestos, reportes, calendario, metas y más. Sin conexión.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#10B981",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

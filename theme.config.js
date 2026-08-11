@@ -1,7 +1,7 @@
 // ============================================================
 //  CONFIGURACIÓN CENTRAL — personaliza aquí toda la app
-//  (marca, colores, moneda, foto/logo). Las categorías y sus
-//  iconos/colores se editan en src/categories.js
+//  (marca, colores, moneda, fecha, foto/logo). Las categorías
+//  y sus iconos/colores por defecto se editan en src/categories.js
 // ============================================================
 
 export default {
@@ -18,15 +18,17 @@ export default {
     logoImage: '',
   },
 
-  // Formato de dinero
-  locale: 'es-MX',
-  currency: 'MXN',
+  // Formato de dinero y fechas por defecto.
+  // Se pueden cambiar en vivo desde la vista Configuración (se guardan en localStorage).
+  locale: 'es-CO', // 'es-CO' | 'es-MX' | 'es-ES' | 'en-US'
+  currency: 'COP', // 'COP' | 'MXN' | 'USD' | 'EUR' | 'PEN' | 'CLP' | 'ARS'
+  dateFormat: 'dd/mm/yyyy', // 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd'
 
-  defaultBudget: 2000,
+  defaultBudget: 4000000,
 
   theme: {
-    // Color de acento inicial (se puede cambiar en vivo desde el panel ⚙)
-    accent: '#4f46e5',
+    // Color de acento inicial (se puede cambiar en vivo desde Configuración)
+    accent: '#10B981',
 
     // 'light' | 'dark' | 'system'
     defaultMode: 'system',
@@ -34,11 +36,12 @@ export default {
 
   // Paleta de acentos disponible en el selector rápido
   accentPresets: [
-    { name: 'Índigo', value: '#4f46e5' },
-    { name: 'Esmeralda', value: '#0d9488' },
-    { name: 'Rosa', value: '#e11d48' },
-    { name: 'Ámbar', value: '#f59e0b' },
-    { name: 'Azul', value: '#2563eb' },
-    { name: 'Violeta', value: '#7c3aed' },
+    { name: 'Esmeralda', value: '#10B981' },
+    { name: 'Verde',     value: '#22C55E' },
+    { name: 'Azul',      value: '#3B82F6' },
+    { name: 'Índigo',    value: '#4F46E5' },
+    { name: 'Violeta',   value: '#8B5CF6' },
+    { name: 'Rosa',      value: '#EC4899' },
+    { name: 'Ámbar',     value: '#F59E0B' },
   ],
 };

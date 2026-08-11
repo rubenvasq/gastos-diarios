@@ -1,27 +1,42 @@
 /* Complementos que Tailwind (CDN) no cubre:
-   variables de tema, ocultar hasta que Alpine carga y animaciones suaves. */
+   variables de tema, scrollbars, ocultar hasta que Alpine carga y animaciones suaves. */
 
 :root {
-  --accent: 79 70 229; /* lo sobreescribe theme.config.js / el panel */
+  --accent: 16 185 129; /* esmeralda; lo sobreescribe theme.config.js / el panel */
   --rose: #e11d48;
   --amber: #f59e0b;
 }
 
 [x-cloak] { display: none !important; }
 
-/* Animaciones de entrada suaves */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Scrollbar fino */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139 / 0.35);
+  border-radius: 999px;
 }
+::-webkit-scrollbar-thumb:hover { background: rgb(100 116 139 / 0.55); }
+::-webkit-scrollbar-track { background: transparent; }
 
-@keyframes slide-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: translateX(0); }
+/* Quitar flechas de los inputs numéricos (look más limpio) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
-.anim-rise { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.anim-item { animation: slide-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* Tecla / atajo (kbd) */
+kbd {
+  font-family: inherit;
+  background: rgb(100 116 139 / 0.15);
+  border: 1px solid rgb(100 116 139 / 0.3);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
 
 /* El input de color nativo ocupa toda la muestra */
 input[type="color"] {
@@ -32,6 +47,27 @@ input[type="color"] {
   background: transparent;
 }
 
+/* Animaciones de entrada suaves */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.anim-rise { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-item { animation: slide-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Escala de entrada para modales */
+@keyframes zoom-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.anim-zoom { animation: zoom-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -39,5 +75,47 @@ input[type="color"] {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Impresión: solo el reporte, sin chrome de la app
+   ============================================================ */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  aside,
+  header,
+  #fab,
+  #toast,
+  .no-print {
+    display: none !important;
+  }
+
+  /* El reporte se imprime solo (aunque se abra desde otra vista) */
+  main > section {
+    display: none !important;
+  }
+  main > section#view-reportes {
+    display: block !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
   }
 }

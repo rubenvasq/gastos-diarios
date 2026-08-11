@@ -3,9 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Controla tus gastos diarios, establece presupuestos y descubre en qué se va tu dinero.">
-  <meta name="theme-color" content="#4f46e5">
-  <title>GastosDiarios — Control de gastos personales</title>
+  <meta name="description" content="GastosDiarios — Gestión financiera personal: cuentas, movimientos, presupuestos, reportes, calendario y más.">
+  <meta name="theme-color" content="#10B981">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GastosDiarios">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <title>GastosDiarios — Gestión financiera</title>
+
+  <!-- Tipografía -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Frameworks (CDN, sin build) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,37 +27,67 @@
       theme: {
         extend: {
           colors: { accent: 'rgb(var(--accent) / <alpha-value>)' },
-          fontFamily: { sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
         },
       },
     };
   </script>
   <style type="text/tailwindcss">
     @layer components {
-      .btn-ghost { @apply inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 transition hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white active:scale-95; }
-      .btn-icon { @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-zinc-500 transition hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white active:scale-95; }
-      .card { @apply bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 rounded-2xl p-6 shadow-sm; }
-      .field { @apply w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-3 py-2.5 text-[15px] outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15; }
-      .stat-label { @apply block text-[11px] uppercase tracking-wider font-semibold text-zinc-400 mb-1.5; }
-      .form-label { @apply block text-[13px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5; }
+      .card { @apply bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgba(15,23,42,.04),0_10px_30px_rgba(15,23,42,.05)]; }
+      .btn-ghost { @apply inline-flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white active:scale-95; }
+      .btn-icon { @apply inline-flex items-center justify-center w-10 h-10 rounded-2xl text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white active:scale-95; }
+      .nav-link { @apply flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100; }
+      .nav-link-active { @apply bg-accent/10 text-accent dark:bg-accent/10 dark:text-accent; }
+      .field { @apply w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-2.5 text-[15px] outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15; }
+      .form-label { @apply block text-[13px] font-medium text-slate-500 dark:text-slate-400 mb-1.5; }
+      .chip { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold; }
     }
   </style>
 
   <link rel="stylesheet" href="styles/main.css">
 
-  <!-- App (registra el componente Alpine); luego Lucide y Alpine -->
+  <!-- App (registra el componente Alpine); luego Lucide, Chart.js y Alpine -->
   <script type="module" src="src/app.js"></script>
   <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased">
-  <div x-data="app" x-cloak class="max-w-4xl mx-auto px-5 py-8 sm:py-10">
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
+  <div x-data="app" x-cloak class="min-h-screen">
 
-    <!-- Header -->
-    <header class="flex items-center justify-between gap-4 flex-wrap mb-8 anim-rise">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl grid place-items-center bg-accent/10 text-accent overflow-hidden shrink-0">
+    <!-- Pantalla de bloqueo (PIN) -->
+    <div x-show="locked" x-cloak class="fixed inset-0 z-[90] bg-slate-950/90 backdrop-blur-xl grid place-items-center p-4">
+      <div class="w-full max-w-xs text-center">
+        <div class="w-16 h-16 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-accent to-emerald-400 text-white grid place-items-center shadow-lg shadow-accent/30">
+          <i data-lucide="lock" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-xl font-bold mb-1 text-white">App bloqueada</h2>
+        <p class="text-sm text-slate-400 mb-6">Ingresa tu PIN para continuar.</p>
+        <input type="password" inputmode="numeric" maxlength="6" x-model="pinInput" @keydown.enter="unlockApp"
+          class="field text-center text-lg tracking-[0.5em] tabular-nums bg-slate-900 text-white border-slate-700 focus:border-accent" placeholder="••••••">
+        <p x-show="pinError" class="text-[13px] font-medium text-rose-400 mt-3" x-text="pinError"></p>
+        <button @click="unlockApp" class="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-accent text-white px-4 py-3 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+          <i data-lucide="unlock" class="w-4 h-4"></i> Desbloquear
+        </button>
+      </div>
+    </div>
+
+    <!-- Overlay móvil -->
+    <div x-show="sidebarOpen" x-cloak x-transition.opacity @click="sidebarOpen = false"
+      class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"></div>
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside
+      class="fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/70 dark:border-slate-800 transition-all duration-300 lg:translate-x-0"
+      :class="[sidebarCollapsed ? 'lg:w-[84px] w-[264px]' : 'w-[264px]', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-6 pt-7 pb-6" :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''">
+        <div class="w-11 h-11 rounded-2xl grid place-items-center bg-accent text-white shadow-lg shadow-accent/30 overflow-hidden shrink-0">
           <template x-if="config.brand.logoImage">
             <img :src="config.brand.logoImage" alt="" class="w-full h-full object-cover">
           </template>
@@ -53,81 +95,1731 @@
             <i :data-lucide="config.brand.logoIcon" class="w-6 h-6"></i>
           </template>
         </div>
-        <div>
-          <h1 class="text-xl font-bold tracking-tight" x-text="config.brand.name"></h1>
-          <p class="text-sm text-zinc-500" x-text="config.brand.tagline"></p>
+        <div class="min-w-0 flex-1" x-show="!sidebarCollapsed">
+          <h1 class="font-bold tracking-tight truncate" x-text="config.brand.name"></h1>
+          <p class="text-xs text-slate-400 truncate" x-text="config.brand.tagline"></p>
         </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button @click="doExport" class="btn-ghost" title="Exportar datos">
-          <i data-lucide="download" class="w-4 h-4"></i><span class="hidden sm:inline">Exportar</span>
-        </button>
-        <label class="btn-ghost cursor-pointer" title="Importar datos">
-          <i data-lucide="upload" class="w-4 h-4"></i><span class="hidden sm:inline">Importar</span>
-          <input type="file" accept=".json" class="hidden" @change="doImport">
-        </label>
-        <button @click="settingsOpen = true" class="btn-icon" title="Personalizar">
-          <i data-lucide="settings-2" class="w-[18px] h-[18px]"></i>
+        <button @click="sidebarCollapsed = !sidebarCollapsed" class="btn-icon w-8 h-8 hidden lg:inline-flex shrink-0" :title="sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'">
+          <i x-show="!sidebarCollapsed" data-lucide="panel-left-close" class="w-4 h-4"></i>
+          <i x-show="sidebarCollapsed" data-lucide="panel-left-open" class="w-4 h-4"></i>
         </button>
       </div>
-    </header>
 
-    <!-- Presupuesto -->
-    <section class="card mb-5 anim-rise">
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h2 class="font-semibold">Presupuesto mensual</h2>
-        <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-full p-1">
-          <button @click="changeMonth(-1)" class="btn-icon w-8 h-8" aria-label="Mes anterior"><i data-lucide="chevron-left" class="w-[18px] h-[18px]"></i></button>
-          <span class="text-sm font-semibold w-32 text-center" x-text="monthLabel"></span>
-          <button @click="changeMonth(1)" class="btn-icon w-8 h-8" aria-label="Mes siguiente"><i data-lucide="chevron-right" class="w-[18px] h-[18px]"></i></button>
+      <!-- Navegación -->
+      <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+        <template x-for="nav in navItems" :key="nav.id">
+          <button @click="goTo(nav.id)" class="w-full nav-link"
+            :class="[view === nav.id ? 'nav-link-active' : '', sidebarCollapsed ? 'lg:justify-center' : '']"
+            :title="sidebarCollapsed ? nav.label : null">
+            <i :data-lucide="nav.icon" class="w-5 h-5 shrink-0"></i>
+            <span x-show="!sidebarCollapsed" x-text="nav.label"></span>
+          </button>
+        </template>
+      </nav>
+
+      <!-- Selector de mes (sidebar) -->
+      <div class="px-4 pb-4" x-show="!sidebarCollapsed">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Mes actual</p>
+        <div class="flex items-center gap-1 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 p-1">
+          <button @click="changeMonth(-1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700 active:scale-95" title="Mes anterior">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <span class="flex-1 text-center text-sm font-semibold tabular-nums" x-text="monthLabel"></span>
+          <button @click="changeMonth(1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700 active:scale-95" title="Mes siguiente">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
-        <div>
-          <span class="stat-label">Gastado</span>
-          <span class="text-2xl font-bold tracking-tight tabular-nums" x-text="fmt(total)"></span>
+      <!-- Perfil / pie -->
+      <div class="px-5 py-5" x-show="!sidebarCollapsed">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full grid place-items-center bg-gradient-to-br from-accent to-emerald-400 text-white text-sm font-bold shrink-0">
+            <span x-text="config.brand.name.slice(0, 2).toUpperCase()"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold truncate" x-text="config.brand.name"></p>
+            <p class="text-xs text-slate-400 truncate">Datos locales</p>
+          </div>
+          <button @click="openConfig" class="btn-icon w-9 h-9" title="Configuración">
+            <i data-lucide="settings-2" class="w-[18px] h-[18px]"></i>
+          </button>
         </div>
-        <div>
-          <span class="stat-label">Presupuesto</span>
-          <div class="flex items-center gap-1">
-            <span class="text-xl font-bold text-zinc-400">$</span>
-            <input type="number" min="0" step="50" :value="state.budget" @change="setBudget($event.target.value)"
-              class="w-28 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-1.5 text-xl font-bold outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15">
+      </div>
+    </aside>
+
+    <!-- ============ CONTENIDO ============ -->
+    <div :class="sidebarCollapsed ? 'lg:pl-[84px]' : 'lg:pl-[264px]'">
+
+      <!-- Topbar -->
+      <header class="sticky top-0 z-30 flex items-center gap-3 lg:gap-5 h-16 px-5 lg:px-8 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800">
+        <button @click="sidebarOpen = true" class="btn-icon lg:hidden" aria-label="Abrir menú">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <h1 class="text-lg font-bold tracking-tight truncate" x-text="showConfig ? 'Configuración' : activeLabel"></h1>
+
+        <div class="flex-1"></div>
+
+        <!-- Selector de mes -->
+        <div class="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full p-1">
+          <button @click="changeMonth(-1)" class="w-8 h-8 grid place-items-center rounded-full text-slate-500 transition hover:bg-white dark:hover:bg-slate-700 active:scale-95" aria-label="Mes anterior">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <span class="text-sm font-semibold w-36 text-center tabular-nums" x-text="monthLabel"></span>
+          <button @click="changeMonth(1)" class="w-8 h-8 grid place-items-center rounded-full text-slate-500 transition hover:bg-white dark:hover:bg-slate-700 active:scale-95" aria-label="Mes siguiente">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Búsqueda global -->
+        <button @click="openGlobalSearch" class="btn-icon" title="Buscar en todo ( / )" aria-label="Buscar en todo">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Búsqueda rápida -->
+        <div class="hidden xl:flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full px-4 h-10 w-56 transition focus-within:ring-4 focus-within:ring-accent/15 focus-within:bg-white dark:focus-within:bg-slate-800">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+          <input type="text" x-model="search" placeholder="Buscar movimientos…" @focus="goTo('movimientos')"
+            class="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-400 min-w-0">
+        </div>
+
+        <!-- Ocultar/revelar montos -->
+        <button x-show="state.privacy.hideAmounts" @click="revealAmounts = !revealAmounts" class="btn-icon" :title="revealAmounts ? 'Ocultar montos' : 'Mostrar montos'" aria-label="Revelar montos">
+          <i :data-lucide="revealAmounts ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Notificaciones -->
+        <div class="relative">
+          <button @click="notifOpen = !notifOpen; profileOpen = false" class="btn-icon relative" aria-label="Notificaciones">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span x-show="alertCount > 0" x-cloak
+              class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center"
+              x-text="alertCount"></span>
+          </button>
+          <div x-show="notifOpen" x-cloak @click.outside="notifOpen = false"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            class="absolute right-0 mt-2 w-80 rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-3 z-40">
+            <p class="px-2 pt-1 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Notificaciones</p>
+            <template x-if="notifications.length === 0">
+              <p class="text-sm text-slate-400 px-2 pb-2 py-1">Todo en orden. Sin avisos por ahora.</p>
+            </template>
+            <template x-for="(n, i) in notifications" :key="i">
+              <div class="flex items-start gap-3 px-2 py-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0"
+                  :class="n.tone === 'danger' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : n.tone === 'warn' ? 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400'">
+                  <i :data-lucide="n.icon" class="w-4 h-4"></i>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300" x-text="n.text"></p>
+              </div>
+            </template>
           </div>
         </div>
-        <div>
-          <span class="stat-label">Disponible</span>
-          <span class="text-2xl font-bold tracking-tight tabular-nums" :class="remaining >= 0 ? 'text-emerald-500' : 'text-rose-500'" x-text="fmt(remaining)"></span>
+
+        <!-- Perfil -->
+        <div class="relative">
+          <button @click="profileOpen = !profileOpen; notifOpen = false" class="flex items-center gap-2 rounded-full p-1 pr-2.5 transition hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95">
+            <span class="w-9 h-9 rounded-full grid place-items-center bg-gradient-to-br from-accent to-emerald-400 text-white text-sm font-bold">
+              <span x-text="config.brand.name.slice(0, 2).toUpperCase()"></span>
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 hidden sm:block"></i>
+          </button>
+          <div x-show="profileOpen" x-cloak @click.outside="profileOpen = false"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            class="absolute right-0 mt-2 w-60 rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-2 z-40">
+            <button @click="openConfig" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800">
+              <i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i> Configuración
+            </button>
+            <button @click="doExport(); profileOpen = false" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800">
+              <i data-lucide="download" class="w-4 h-4 text-slate-400"></i> Exportar datos
+            </button>
+            <label class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+              <i data-lucide="upload" class="w-4 h-4 text-slate-400"></i> Importar datos
+              <input type="file" accept=".json" class="hidden" @change="doImport">
+            </label>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div class="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-        <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${pct}%; background:${progressColor}`"></div>
-      </div>
+      <main class="px-5 lg:px-8 py-6 lg:py-8 space-y-8">
 
-      <template x-if="alert">
-        <p class="mt-4 text-[13px] font-medium px-3.5 py-2.5 rounded-xl anim-rise flex items-center gap-2"
-           :class="alert.kind === 'danger' ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'">
-          <i :data-lucide="alert.kind === 'danger' ? 'triangle-alert' : 'circle-check'" class="w-4 h-4 shrink-0"></i>
-          <span x-text="alert.text"></span>
-        </p>
-      </template>
-    </section>
+        <!-- Página principal (todas las secciones del scroll) -->
+        <div x-show="!showConfig" class="space-y-8">
 
-    <!-- Formulario + Categorías -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 anim-rise">
-      <section class="card">
-        <h2 class="font-semibold mb-5">Registrar gasto</h2>
-        <form @submit.prevent="addExpense" class="flex flex-col gap-4">
-          <div>
-            <label class="form-label" for="amount">Monto</label>
-            <div class="flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 pl-3 transition focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15">
-              <span class="font-semibold text-zinc-400">$</span>
-              <input id="amount" type="number" min="0.01" step="0.01" x-model="form.amount" placeholder="0.00" class="flex-1 bg-transparent py-2.5 pr-3 outline-none text-[15px]">
+        <!-- ===================================================== -->
+        <!-- VISTA: INICIO -->
+        <!-- ===================================================== -->
+        <section id="view-inicio" x-cloak class="scroll-mt-24 space-y-8">
+          <!-- KPIs -->
+          <div class="grid grid-cols-12 gap-5" x-show="widgetOn('kpis')">
+            <template x-for="k in kpis" :key="k.id">
+              <div class="col-span-12 sm:col-span-6 xl:col-span-4 2xl:col-span-2 2xl:col-span-4 card p-5 anim-rise">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="w-11 h-11 rounded-2xl grid place-items-center shadow-sm" :style="`background:${k.color}1a; color:${k.color}`">
+                    <i :data-lucide="k.icon" class="w-5 h-5"></i>
+                  </div>
+                  <template x-if="k.chip">
+                    <span class="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-1"
+                      :class="k.chip.tone === 'good' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                        : k.chip.tone === 'bad' ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                        : k.chip.tone === 'warn' ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'
+                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+                      <i x-show="k.chip.icon" :data-lucide="k.chip.icon" class="w-3.5 h-3.5"></i>
+                      <span x-text="k.chip.text"></span>
+                    </span>
+                  </template>
+                </div>
+                <div class="text-2xl 2xl:text-[26px] font-bold tracking-tight tabular-nums truncate" x-text="k.value"></div>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400" x-text="k.label"></p>
+              </div>
+            </template>
+          </div>
+
+          <!-- Cuentas -->
+          <div x-show="widgetOn('accounts')">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="text-lg font-bold tracking-tight">Cuentas</h2>
+              <button @click="goTo('cuentas')" class="btn-ghost py-1.5 px-3 text-xs">
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i> Gestionar
+              </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+              <template x-for="a in activeAccounts" :key="a.id">
+                <div @click="goTo('cuentas')" title="Ver cuentas"
+                  class="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-slate-800 p-5 h-36 cursor-pointer transition hover:-translate-y-0.5 hover:shadow-xl group"
+                  :style="`background:linear-gradient(135deg, ${a.color}1f 0%, ${a.color}0d 55%, transparent 100%)`">
+                  <span class="absolute -bottom-6 -right-6 w-28 h-28 rounded-full opacity-15 transition group-hover:scale-110" :style="`background:${a.color}`"></span>
+                  <i :data-lucide="a.icon" class="absolute right-4 top-4 w-8 h-8 opacity-25" :style="`color:${a.color}`"></i>
+                  <div class="relative flex flex-col justify-between h-full">
+                    <div>
+                      <p class="text-[11px] font-bold uppercase tracking-wider" :style="`color:${a.color}`" x-text="accountTypeLabel(a.type)"></p>
+                      <p class="mt-2 text-lg font-bold tracking-tight tabular-nums truncate" x-text="fmt(a.balance)"></p>
+                    </div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium truncate" x-text="a.name"></p>
+                  </div>
+                </div>
+              </template>
+              <button @click="goTo('cuentas')"
+                class="rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-accent hover:border-accent transition grid place-items-center h-36">
+                <span class="flex flex-col items-center gap-1.5 text-sm font-medium">
+                  <i data-lucide="plus" class="w-5 h-5"></i> Nueva cuenta
+                </span>
+              </button>
             </div>
           </div>
+
+          <!-- Análisis + Presupuesto -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('analytics') || widgetOn('budget')">
+            <section class="col-span-12 lg:col-span-7 card" x-show="widgetOn('analytics')">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold tracking-tight">Análisis de gastos</h2>
+                <span class="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-3 py-1.5 rounded-full tabular-nums" x-text="monthLabel"></span>
+              </div>
+
+              <template x-if="hasChartData">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <div class="relative h-56 w-56 mx-auto">
+                    <canvas id="chart-analytics"></canvas>
+                  </div>
+                  <ul class="space-y-3.5">
+                    <template x-for="b in breakdown" :key="b.cat.id">
+                      <li class="flex items-center gap-3 anim-item">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="`background:${b.cat.color}`"></span>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium flex items-center gap-2">
+                            <span x-text="b.cat.label"></span>
+                            <span class="text-xs text-slate-400 tabular-nums" x-text="`${b.pct.toFixed(0)}%`"></span>
+                          </p>
+                          <p class="text-xs text-slate-400 tabular-nums" x-text="fmt(b.amount)"></p>
+                        </div>
+                        <div class="w-7 h-7 rounded-lg grid place-items-center shrink-0" :style="`background:${b.cat.color}1a; color:${b.cat.color}`">
+                          <i :data-lucide="b.cat.icon" class="w-3.5 h-3.5"></i>
+                        </div>
+                      </li>
+                    </template>
+                  </ul>
+                </div>
+              </template>
+
+              <template x-if="!hasChartData">
+                <div class="text-center py-12">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                    <i data-lucide="chart-pie" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+                  </div>
+                  <p class="font-semibold">Aún no hay gastos este mes</p>
+                  <p class="text-sm text-slate-400 mt-1 mb-5">Registra tu primer gasto o prueba con datos de ejemplo.</p>
+                  <div class="flex justify-center gap-2">
+                    <button @click="loadDemo" class="btn-ghost">
+                      <i data-lucide="sparkles" class="w-4 h-4 text-accent"></i> Datos de ejemplo
+                    </button>
+                    <button @click="openTxModal('expense')" class="btn-ghost text-accent">
+                      <i data-lucide="plus" class="w-4 h-4"></i> Registrar gasto
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </section>
+
+            <section class="col-span-12 lg:col-span-5 card" x-show="widgetOn('budget')">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold tracking-tight">Presupuesto del mes</h2>
+                <button @click="goTo('presupuestos')" class="btn-icon w-9 h-9" title="Ver presupuestos">
+                  <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <template x-if="alert">
+                <p class="mb-5 text-[13px] font-medium px-3.5 py-2.5 rounded-2xl flex items-center gap-2"
+                  :class="alert.kind === 'danger' ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'">
+                  <i :data-lucide="alert.kind === 'danger' ? 'triangle-alert' : 'circle-check'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="alert.text"></span>
+                </p>
+              </template>
+
+              <template x-if="budgetRows.length === 0">
+                <div class="text-center py-10">
+                  <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                    <i data-lucide="gauge" class="w-6 h-6 text-slate-300 dark:text-slate-600"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">Define presupuestos por categoría para ver su avance aquí.</p>
+                  <button @click="goTo('presupuestos')" class="btn-ghost mt-4 text-xs">Configurar presupuestos</button>
+                </div>
+              </template>
+
+              <ul class="space-y-5">
+                <template x-for="r in budgetRows" :key="r.cat.id">
+                  <li>
+                    <div class="flex items-center gap-2.5 mb-2">
+                      <div class="w-8 h-8 rounded-xl grid place-items-center" :style="`background:${r.cat.color}1a; color:${r.cat.color}`">
+                        <i :data-lucide="r.cat.icon" class="w-4 h-4"></i>
+                      </div>
+                      <span class="flex-1 text-sm font-medium truncate" x-text="r.cat.label"></span>
+                      <span class="text-sm font-semibold tabular-nums" x-text="fmt(r.spent)"></span>
+                      <span class="text-xs text-slate-400 tabular-nums" x-text="`/ ${fmt(r.budget)}`"></span>
+                    </div>
+                    <div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${r.pct}%; background:${r.barColor}`"></div>
+                    </div>
+                    <template x-if="r.over">
+                      <p class="text-xs text-rose-500 mt-1 font-medium" x-text="`Superado por ${fmt(r.spent - r.budget)}`"></p>
+                    </template>
+                    <template x-if="r.warn && !r.over">
+                      <p class="text-xs text-amber-500 mt-1 font-medium" x-text="`Usaste el ${r.raw.toFixed(0)}% del presupuesto`"></p>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </div>
+
+          <!-- Transacciones recientes + Insights -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('recent') || widgetOn('insights')">
+            <section class="col-span-12 lg:col-span-7 card" x-show="widgetOn('recent')">
+              <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Transacciones recientes</h2>
+                <button @click="goTo('movimientos')" class="text-xs font-semibold text-accent hover:underline">Ver todos los movimientos</button>
+              </div>
+
+              <template x-if="recentTx.length > 0">
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <template x-for="t in recentTx" :key="t.rec.id">
+                    <li class="flex items-center gap-3 py-3 group">
+                      <div class="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+                        :class="t.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : t.kind === 'transfer' ? 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400' : ''"
+                        :style="t.kind === 'expense' ? `background:${t.cat.color}1a; color:${t.cat.color}` : ''">
+                        <i x-show="t.kind === 'income'" data-lucide="arrow-down-left" class="w-[18px] h-[18px]"></i>
+                        <i x-show="t.kind === 'transfer'" data-lucide="arrow-right-left" class="w-[18px] h-[18px]"></i>
+                        <i x-show="t.kind === 'expense'" :data-lucide="t.cat.icon" class="w-[18px] h-[18px]"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm truncate" x-text="t.rec.description || (t.kind === 'income' ? 'Ingreso' : t.kind === 'transfer' ? 'Transferencia' : t.cat.label)"></p>
+                        <p class="text-xs text-slate-400 truncate" x-text="`${tableDate(t.rec.date)} · ${t.acct.name}${t.toAcct ? ' → ' + t.toAcct.name : ''}`"></p>
+                      </div>
+                      <span class="font-semibold tabular-nums text-sm shrink-0" :class="t.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : t.kind === 'transfer' ? 'text-sky-500' : 'text-slate-900 dark:text-slate-100'">
+                        <span x-show="t.kind === 'income'">+</span><span x-show="t.kind === 'expense'">−</span><span x-text="fmt(t.rec.amount)"></span>
+                      </span>
+                    </li>
+                  </template>
+                </ul>
+              </template>
+
+              <template x-if="recentTx.length === 0">
+                <div class="text-center py-12">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                    <i data-lucide="receipt" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+                  </div>
+                  <p class="font-semibold">Sin movimientos este mes</p>
+                  <p class="text-sm text-slate-400 mt-1 mb-5">Usa el botón flotante para registrar tu primer gasto o ingreso.</p>
+                  <button @click="loadDemo" class="btn-ghost">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-accent"></i> Datos de ejemplo
+                  </button>
+                </div>
+              </template>
+            </section>
+
+            <section class="col-span-12 lg:col-span-5 card" x-show="widgetOn('insights')">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Resumen inteligente</h2>
+                <span class="chip bg-accent/10 text-accent"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Insights</span>
+              </div>
+              <template x-if="insights.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Registra movimientos para generar tu resumen inteligente.</p>
+              </template>
+              <ul class="space-y-3">
+                <template x-for="(ins, i) in insights" :key="i">
+                  <li class="flex items-start gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition anim-item"
+                    :class="ins.tone === 'bad' ? 'bg-rose-50/60 dark:bg-rose-500/5' : ins.tone === 'warn' ? 'bg-amber-50/60 dark:bg-amber-500/5' : ''">
+                    <div class="w-8 h-8 rounded-xl grid place-items-center shrink-0"
+                      :class="ins.tone === 'ok' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : ins.tone === 'warn' ? 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400' : ins.tone === 'bad' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+                      <i :data-lucide="ins.icon" class="w-4 h-4"></i>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" x-text="ins.text"></p>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </div>
+
+          <!-- Top gastos + Visión mensual -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('top') || widgetOn('overview')">
+            <section class="col-span-12 lg:col-span-5 card" x-show="widgetOn('top')">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Top gastos del mes</h2>
+                <button @click="goTo('reportes')" class="text-xs font-semibold text-accent hover:underline">Ver reportes</button>
+              </div>
+              <template x-if="top5.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Sin gastos este mes.</p>
+              </template>
+              <ol class="space-y-3">
+                <template x-for="(g, i) in top5" :key="g.id">
+                  <li class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center text-lg shrink-0" :class="i < 3 ? 'bg-slate-100 dark:bg-slate-800' : 'bg-transparent'" x-text="['🥇','🥈','🥉'][i] || `${i + 1}.`"></span>
+                    <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0" :style="`background:${g.cat.color}1a; color:${g.cat.color}`">
+                      <i :data-lucide="g.cat.icon" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate" x-text="g.description || g.cat.label"></p>
+                      <p class="text-xs text-slate-400" x-text="`${g.cat.label} · ${tableDate(g.date)}`"></p>
+                    </div>
+                    <span class="font-semibold tabular-nums text-sm shrink-0">−<span x-text="fmt(g.amount)"></span></span>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <section class="col-span-12 lg:col-span-7 card" x-show="widgetOn('overview')">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold tracking-tight">Visión mensual</h2>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-accent"></span> Ingresos</span>
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Gastos</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas id="chart-overview"></canvas>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: CUENTAS -->
+        <!-- ===================================================== -->
+        <section id="view-cuentas" x-cloak class="scroll-mt-24 space-y-8">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Cuentas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Gestiona tus cuentas, saldos y transferencias.</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="openTxModal('transfer')" class="btn-ghost">
+                <i data-lucide="arrow-right-left" class="w-4 h-4 text-accent"></i> Transferir
+              </button>
+              <button @click="openAccountModal()" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+                <i data-lucide="plus" class="w-4 h-4"></i> Nueva cuenta
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Balance total</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="fmt(totalBalance)"></p>
+            </div>
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Cuentas activas</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="activeAccounts.length"></p>
+            </div>
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Movimientos este mes</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="allTx.length"></p>
+            </div>
+          </div>
+
+          <template x-if="accounts.length === 0">
+            <div class="card text-center py-16">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                <i data-lucide="wallet" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+              </div>
+              <p class="font-semibold">No tienes cuentas todavía</p>
+              <p class="text-sm text-slate-400 mt-1 mb-5">Crea tu primera cuenta para empezar a registrar movimientos.</p>
+              <button @click="openAccountModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Crear cuenta</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="a in accounts" :key="a.id">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4 relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-slate-800 p-5 transition hover:-translate-y-0.5 hover:shadow-xl group"
+                :style="`background:linear-gradient(135deg, ${a.color}1f 0%, ${a.color}0d 55%, transparent 100%)`">
+                <span class="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-15 transition group-hover:scale-110" :style="`background:${a.color}`"></span>
+                <div class="relative">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-11 h-11 rounded-2xl grid place-items-center shadow-sm" :style="`background:${a.color}1f; color:${a.color}`">
+                        <i :data-lucide="a.icon" class="w-5 h-5"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="font-semibold truncate" x-text="a.name"></p>
+                        <p class="text-xs text-slate-400" x-text="accountTypeLabel(a.type)"></p>
+                      </div>
+                    </div>
+                    <span class="chip text-[10px] px-2 py-0.5" :class="a.status === 'activa' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'">
+                      <span class="w-1.5 h-1.5 rounded-full" :class="a.status === 'activa' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                      <span x-text="a.status === 'activa' ? 'Activa' : 'Inactiva'"></span>
+                    </span>
+                  </div>
+
+                  <p class="text-2xl font-bold tracking-tight tabular-nums truncate" x-text="fmt(a.balance)"></p>
+
+                  <div class="flex items-center justify-between mt-5">
+                    <button @click="viewAccountMovements(a.id)" class="text-xs font-semibold text-accent hover:underline">
+                      Ver movimientos
+                    </button>
+                    <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                      <button @click="openAccountModal(a)" class="btn-icon w-8 h-8" title="Editar cuenta">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                      </button>
+                      <button @click="deleteAccount(a)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar cuenta">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: MOVIMIENTOS -->
+        <!-- ===================================================== -->
+        <section id="view-movimientos" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Movimientos</h2>
+              <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+            </div>
+            <button @click="openTxModal('expense')" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nuevo movimiento
+            </button>
+          </div>
+
+          <!-- Filtros -->
+          <div class="card p-5 space-y-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full px-4 h-10 flex-1 min-w-[220px] transition focus-within:ring-4 focus-within:ring-accent/15 focus-within:bg-white dark:focus-within:bg-slate-800">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input type="text" x-model.debounce.250ms="search" placeholder="Buscar por descripción, categoría o cuenta…" class="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-400 min-w-0">
+              </div>
+              <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full p-1 text-xs">
+                <button @click="txFilter = 'all'" class="px-3 py-1.5 rounded-full font-medium transition" :class="txFilter === 'all' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Todos</button>
+                <button @click="txFilter = 'expense'" class="px-3 py-1.5 rounded-full font-medium transition" :class="txFilter === 'expense' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Gastos</button>
+                <button @click="txFilter = 'income'" class="px-3 py-1.5 rounded-full font-medium transition" :class="txFilter === 'income' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Ingresos</button>
+                <button @click="txFilter = 'transfer'" class="px-3 py-1.5 rounded-full font-medium transition" :class="txFilter === 'transfer' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Transferencias</button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="w-full sm:w-44">
+                <label class="form-label">Cuenta</label>
+                <select x-model="txAccount" class="field text-sm">
+                  <option value="all">Todas</option>
+                  <template x-for="a in accounts" :key="a.id">
+                    <option :value="a.id" x-text="a.name"></option>
+                  </template>
+                </select>
+              </div>
+              <div class="w-full sm:w-44">
+                <label class="form-label">Categoría</label>
+                <select x-model="txCategory" class="field text-sm">
+                  <option value="all">Todas</option>
+                  <template x-for="c in categories" :key="c.id">
+                    <option :value="c.id" x-text="c.label"></option>
+                  </template>
+                </select>
+              </div>
+              <div class="w-full sm:w-40">
+                <label class="form-label">Desde</label>
+                <input type="date" x-model="dateFrom" class="field text-sm">
+              </div>
+              <div class="w-full sm:w-40">
+                <label class="form-label">Hasta</label>
+                <input type="date" x-model="dateTo" class="field text-sm">
+              </div>
+              <div class="w-full sm:w-44">
+                <label class="form-label">Ordenar por</label>
+                <select x-model="sortBy" class="field text-sm">
+                  <option value="date">Fecha</option>
+                  <option value="amount">Monto</option>
+                  <option value="description">Descripción</option>
+                </select>
+              </div>
+              <button @click="sortDir = sortDir === 'asc' ? 'desc' : 'asc'" class="btn-ghost" :title="sortDir === 'asc' ? 'Ascendente' : 'Descendente'">
+                <i :data-lucide="sortDir === 'asc' ? 'arrow-up' : 'arrow-down'" class="w-4 h-4"></i>
+                <span x-text="sortDir === 'asc' ? 'Asc' : 'Desc'"></span>
+              </button>
+              <button x-show="hasActiveFilters" @click="clearTxFilters" class="btn-ghost text-rose-500 border-rose-200 dark:border-rose-500/30">
+                <i data-lucide="x" class="w-4 h-4"></i> Limpiar filtros
+              </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <span x-text="`${filteredTx.length} movimiento(s)`"></span>
+              <template x-if="filteredTotals.expenses > 0">
+                <span>Gastos: <b class="text-rose-500 tabular-nums" x-text="fmt(filteredTotals.expenses)"></b></span>
+              </template>
+              <template x-if="filteredTotals.income > 0">
+                <span>Ingresos: <b class="text-emerald-500 tabular-nums" x-text="fmt(filteredTotals.income)"></b></span>
+              </template>
+            </div>
+          </div>
+
+          <!-- Tabla (desktop) -->
+          <template x-if="filteredTx.length > 0">
+            <div class="card p-0 overflow-hidden hidden md:block">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                  <thead>
+                    <tr class="text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                      <th class="py-3.5 px-5 font-semibold">Movimiento</th>
+                      <th class="py-3.5 px-3 font-semibold hidden xl:table-cell">Categoría</th>
+                      <th class="py-3.5 px-3 font-semibold hidden lg:table-cell">Cuenta</th>
+                      <th class="py-3.5 px-3 font-semibold">Fecha</th>
+                      <th class="py-3.5 px-3 font-semibold">Tipo</th>
+                      <th class="py-3.5 px-3 font-semibold text-right">Valor</th>
+                      <th class="py-3.5 px-5"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <template x-for="t in visibleTx" :key="t.rec.id">
+                      <tr class="group hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                        <td class="py-3.5 px-5">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+                              :class="t.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : t.kind === 'transfer' ? 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400' : ''"
+                              :style="t.kind === 'expense' ? `background:${t.cat.color}1a; color:${t.cat.color}` : ''">
+                              <i x-show="t.kind === 'income'" data-lucide="arrow-down-left" class="w-[18px] h-[18px]"></i>
+                              <i x-show="t.kind === 'transfer'" data-lucide="arrow-right-left" class="w-[18px] h-[18px]"></i>
+                              <i x-show="t.kind === 'expense'" :data-lucide="t.cat.icon" class="w-[18px] h-[18px]"></i>
+                            </div>
+                            <div class="min-w-0 max-w-[260px]">
+                              <p class="font-medium text-sm truncate" x-text="t.rec.description || (t.kind === 'income' ? 'Ingreso' : t.kind === 'transfer' ? 'Transferencia' : t.cat.label)"></p>
+                              <p x-show="t.rec.note" class="text-xs text-slate-400 truncate" x-text="t.rec.note"></p>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="py-3.5 px-3 hidden xl:table-cell text-sm text-slate-500 dark:text-slate-400" x-text="t.kind === 'expense' ? t.cat.label : '—'">
+                          <span x-show="receiptsFor(t.rec.id).length > 0" class="ml-1 inline-flex items-center gap-1 text-[10px] font-semibold text-accent align-middle" title="Tiene comprobantes">
+                            <i data-lucide="paperclip" class="w-3 h-3"></i>
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-3 hidden lg:table-cell">
+                          <span class="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                            <i :data-lucide="t.acct.icon" class="w-4 h-4 text-slate-400"></i>
+                            <span class="truncate" x-text="t.toAcct ? `${t.acct.name} → ${t.toAcct.name}` : t.acct.name"></span>
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-3 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap tabular-nums" x-text="tableDate(t.rec.date)"></td>
+                        <td class="py-3.5 px-3">
+                          <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap" :class="txStatus(t).cls">
+                            <i :data-lucide="txStatus(t).icon" class="w-3.5 h-3.5"></i>
+                            <span x-text="txStatus(t).label"></span>
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-3 text-right">
+                          <span class="font-semibold tabular-nums text-sm" :class="t.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : t.kind === 'transfer' ? 'text-sky-500' : 'text-slate-900 dark:text-slate-100'">
+                            <span x-show="t.kind === 'income'">+</span><span x-show="t.kind === 'expense'">−</span><span x-text="fmt(t.rec.amount)"></span>
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-5">
+                          <div class="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                            <button @click="openTxModal(t.kind, t.rec)" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" title="Editar">
+                              <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
+                            <button @click="duplicateTx(t)" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" title="Duplicar">
+                              <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                            <button @click="removeTx(t)" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar">
+                              <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+
+          <!-- Tarjetas (móvil) -->
+          <template x-if="filteredTx.length > 0">
+            <div class="space-y-3 md:hidden">
+              <template x-for="t in visibleTx" :key="t.rec.id">
+                <div class="card p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+                      :class="t.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : t.kind === 'transfer' ? 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400' : ''"
+                      :style="t.kind === 'expense' ? `background:${t.cat.color}1a; color:${t.cat.color}` : ''">
+                      <i x-show="t.kind === 'income'" data-lucide="arrow-down-left" class="w-[18px] h-[18px]"></i>
+                      <i x-show="t.kind === 'transfer'" data-lucide="arrow-right-left" class="w-[18px] h-[18px]"></i>
+                      <i x-show="t.kind === 'expense'" :data-lucide="t.cat.icon" class="w-[18px] h-[18px]"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate" x-text="t.rec.description || (t.kind === 'income' ? 'Ingreso' : t.kind === 'transfer' ? 'Transferencia' : t.cat.label)"></p>
+                      <p class="text-xs text-slate-400 truncate" x-text="`${tableDate(t.rec.date)} · ${t.acct.name}${t.toAcct ? ' → ' + t.toAcct.name : ''} · ${txStatus(t).label}`"></p>
+                    </div>
+                    <span class="font-semibold tabular-nums text-sm shrink-0" :class="t.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : t.kind === 'transfer' ? 'text-sky-500' : 'text-slate-900 dark:text-slate-100'">
+                      <span x-show="t.kind === 'income'">+</span><span x-show="t.kind === 'expense'">−</span><span x-text="fmt(t.rec.amount)"></span>
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button @click="openTxModal(t.kind, t.rec)" class="btn-ghost py-1.5 px-3 text-xs"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar</button>
+                    <button @click="duplicateTx(t)" class="btn-ghost py-1.5 px-3 text-xs"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Duplicar</button>
+                    <button @click="removeTx(t)" class="btn-ghost py-1.5 px-3 text-xs text-rose-500 border-rose-200 dark:border-rose-500/30"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Paginación -->
+          <template x-if="hiddenTxCount > 0">
+            <div class="flex justify-center pt-2">
+              <button @click="expandTx" class="btn-ghost text-accent"><i data-lucide="chevron-down" class="w-4 h-4"></i> Mostrar <span x-text="hiddenTxCount"></span> más</button>
+            </div>
+          </template>
+          <template x-if="txExpanded && filteredTx.length > txLimit">
+            <div class="flex justify-center pt-2">
+              <button @click="collapseTx" class="btn-ghost"><i data-lucide="chevron-up" class="w-4 h-4"></i> Mostrar menos</button>
+            </div>
+          </template>
+
+          <!-- Estado vacío -->
+          <template x-if="filteredTx.length === 0">
+            <div class="card text-center py-16">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                <i data-lucide="receipt" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+              </div>
+              <p class="font-semibold" x-text="hasActiveFilters ? 'Sin movimientos que coincidan con los filtros' : 'No tienes movimientos todavía'"></p>
+              <p class="text-sm text-slate-400 mt-1 mb-5">Usa el botón + para registrar tu primer movimiento.</p>
+              <template x-if="!hasActiveFilters">
+                <button @click="openTxModal('expense')" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Agregar primer movimiento</button>
+              </template>
+            </div>
+          </template>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: PRESUPUESTOS -->
+        <!-- ===================================================== -->
+        <section id="view-presupuestos" x-cloak class="scroll-mt-24 space-y-6">
           <div>
+            <h2 class="text-xl font-bold tracking-tight">Presupuestos</h2>
+            <p class="text-sm text-slate-400 mt-0.5">Define límites mensuales por categoría y controla tu avance.</p>
+          </div>
+
+          <!-- Presupuesto global -->
+          <div class="card">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 class="font-bold">Presupuesto mensual</h3>
+                <p class="text-sm text-slate-400">Límite global para todos tus gastos.</p>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="fmt(state.budget)"></p>
+                <p class="text-xs text-slate-400 tabular-nums" x-text="`Gastado: ${fmt(totalExpenses)} · Restante: ${fmt(remainingBudget)}`"></p>
+              </div>
+            </div>
+            <input type="range" min="0" max="10000000" step="100000" :value="state.budget" @input="setBudget($event.target.value)" class="w-full accent-emerald-500 mb-2">
+            <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1">
+              <div class="h-full rounded-full transition-all duration-700 ease-out"
+                :style="`width:${budgetPct}%; ${budgetPct >= 100 ? 'background:#F43F5E' : budgetPct >= 90 ? 'background:#F59E0B' : 'background:rgb(var(--accent))'}`"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span x-text="`${budgetPct}% usado`"></span>
+              <span x-text="`0% · 100%`"></span>
+            </div>
+            <div class="mt-4 flex flex-wrap items-end gap-3">
+              <div class="w-56">
+                <label class="form-label">Editar presupuesto</label>
+                <input type="number" min="0" step="10000" :value="state.budget" @change="setBudget($event.target.value)" class="field text-sm">
+              </div>
+              <template x-if="alert">
+                <p class="flex-1 text-[13px] font-medium px-3.5 py-2.5 rounded-2xl flex items-center gap-2"
+                  :class="alert.kind === 'danger' ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'">
+                  <i :data-lucide="alert.kind === 'danger' ? 'triangle-alert' : 'circle-check'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="alert.text"></span>
+                </p>
+              </template>
+            </div>
+          </div>
+
+          <!-- Alertas por categoría -->
+          <template x-if="budgetRows.filter(r => r.over || r.warn).length > 0">
+            <div class="space-y-2">
+              <template x-for="r in budgetRows.filter(r => r.over || r.warn)" :key="r.cat.id">
+                <p class="text-[13px] font-medium px-4 py-3 rounded-2xl flex items-center gap-2"
+                  :class="r.over ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'">
+                  <i :data-lucide="r.over ? 'triangle-alert' : 'circle-alert'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="r.over ? `Has superado tu presupuesto de ${r.cat.label} por ${fmt(r.spent - r.budget)}.` : `Has utilizado el ${r.raw.toFixed(0)}% de tu presupuesto de ${r.cat.label}.`"></span>
+                </p>
+              </template>
+            </div>
+          </template>
+
+          <!-- Presupuestos por categoría -->
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="r in allBudgetRows" :key="r.cat.id">
+              <div class="col-span-12 md:col-span-6 xl:col-span-4 card">
+                <div class="flex items-center gap-2.5 mb-3">
+                  <div class="w-9 h-9 rounded-xl grid place-items-center" :style="`background:${r.cat.color}1a; color:${r.cat.color}`">
+                    <i :data-lucide="r.cat.icon" class="w-4 h-4"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate" x-text="r.cat.label"></p>
+                    <p class="text-xs text-slate-400" x-text="r.budget > 0 ? `Gastado ${fmt(r.spent)} de ${fmt(r.budget)}` : 'Sin presupuesto definido'"></p>
+                  </div>
+                </div>
+
+                <template x-if="r.budget > 0">
+                  <div class="mb-3">
+                    <div class="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${r.pct}%; background:${r.barColor}`"></div>
+                    </div>
+                    <div class="flex items-center justify-between mt-1.5 text-xs">
+                      <span class="text-slate-400" x-text="`${r.raw.toFixed(0)}% usado`"></span>
+                      <span class="font-semibold tabular-nums" :class="r.over ? 'text-rose-500' : r.warn ? 'text-amber-500' : 'text-emerald-500'"
+                        x-text="r.over ? `+${fmt(r.spent - r.budget)}` : `${fmt(r.budget - r.spent)} restante`"></span>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="r.budget === 0">
+                  <p class="text-xs text-slate-400 mb-3">Establece un límite para controlar esta categoría.</p>
+                </template>
+
+                <div class="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <span class="text-xs text-slate-400">Límite</span>
+                  <input type="number" min="0" step="10000" :value="r.budget" @change="setCatBudget(r.cat.id, $event.target.value)"
+                    class="w-32 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1.5 text-right text-sm font-semibold tabular-nums outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15">
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: REPORTES -->
+        <!-- ===================================================== -->
+        <section id="view-reportes" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Reportes</h2>
+              <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+            </div>
+            <div class="flex flex-wrap gap-2 no-print">
+              <button @click="doExportReportsCSV" class="btn-ghost"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-accent"></i> Exportar CSV</button>
+              <button @click="doExport" class="btn-ghost"><i data-lucide="download" class="w-4 h-4 text-accent"></i> Exportar JSON</button>
+              <button @click="doPrint" class="btn-ghost"><i data-lucide="printer" class="w-4 h-4 text-accent"></i> Imprimir</button>
+            </div>
+          </div>
+
+          <!-- Filtros de reporte -->
+          <div class="card p-5 flex flex-wrap items-end gap-3 no-print">
+            <div class="w-full sm:w-48">
+              <label class="form-label">Mes</label>
+              <div class="flex items-center gap-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-1">
+                <button @click="changeMonth(-1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700" title="Mes anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                <span class="flex-1 text-center text-sm font-semibold" x-text="monthLabel"></span>
+                <button @click="changeMonth(1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700" title="Mes siguiente"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Categoría</label>
+              <select x-model="reportCategory" class="field text-sm">
+                <option value="all">Todas</option>
+                <template x-for="c in categories" :key="c.id">
+                  <option :value="c.id" x-text="c.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Cuenta</label>
+              <select x-model="reportAccount" class="field text-sm">
+                <option value="all">Todas</option>
+                <template x-for="a in accounts" :key="a.id">
+                  <option :value="a.id" x-text="a.name"></option>
+                </template>
+              </select>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Tipo de movimiento</label>
+              <select x-model="reportType" class="field text-sm">
+                <option value="all">Todos</option>
+                <option value="expense">Gastos</option>
+                <option value="income">Ingresos</option>
+                <option value="transfer">Transferencias</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Resumen del mes -->
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Ingresos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums text-emerald-500" x-text="fmt(totalIncome)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Gastos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums text-rose-500" x-text="fmt(reportTotal)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Ahorro</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums" :class="savings >= 0 ? 'text-slate-900 dark:text-slate-100' : 'text-rose-500'" x-text="fmt(savings)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Movimientos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums" x-text="allTx.length"></p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Doughnut: gastos por categoría -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <div class="flex items-center justify-between mb-5">
+                <h3 class="font-bold">Gastos por categoría</h3>
+                <span class="chip bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px]" x-text="fmt(reportTotal)"></span>
+              </div>
+              <template x-if="reportByCategory.length > 0">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div class="relative h-52 w-52 mx-auto">
+                    <canvas id="chart-cat"></canvas>
+                  </div>
+                  <ul class="space-y-2.5">
+                    <template x-for="b in reportByCategory" :key="b.cat.id">
+                      <li class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="`background:${b.cat.color}`"></span>
+                        <span class="text-sm font-medium flex-1 truncate" x-text="b.cat.label"></span>
+                        <span class="text-xs text-slate-400 tabular-nums" x-text="`${((b.amount / reportTotal) * 100).toFixed(0)}%`"></span>
+                        <span class="text-sm font-semibold tabular-nums" x-text="fmt(b.amount)"></span>
+                      </li>
+                    </template>
+                  </ul>
+                </div>
+              </template>
+              <template x-if="reportByCategory.length === 0">
+                <p class="text-sm text-slate-400 py-12 text-center">Sin gastos para los filtros seleccionados.</p>
+              </template>
+            </section>
+
+            <!-- Bar: ingresos vs gastos -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <div class="flex items-center justify-between mb-5">
+                <h3 class="font-bold">Ingresos vs gastos</h3>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-accent"></span> Ingresos</span>
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Gastos</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas id="chart-ivg"></canvas>
+              </div>
+            </section>
+
+            <!-- Line: evolución mensual -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Evolución mensual</h3>
+              <div class="h-64">
+                <canvas id="chart-evo"></canvas>
+              </div>
+            </section>
+
+            <!-- Bar: gastos por cuenta -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Gastos por cuenta</h3>
+              <template x-if="reportByAccount.length > 0">
+                <div class="h-64">
+                  <canvas id="chart-acct"></canvas>
+                </div>
+              </template>
+              <template x-if="reportByAccount.length === 0">
+                <p class="text-sm text-slate-400 py-12 text-center">Sin gastos para los filtros seleccionados.</p>
+              </template>
+            </section>
+
+            <!-- Line: ahorro mensual -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Ahorro mensual</h3>
+              <div class="h-64">
+                <canvas id="chart-sav"></canvas>
+              </div>
+            </section>
+
+            <!-- Top gastos -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Top gastos del mes</h3>
+              <template x-if="top5.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Sin gastos este mes.</p>
+              </template>
+              <ol class="space-y-3">
+                <template x-for="(g, i) in top5" :key="g.id">
+                  <li class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center text-lg shrink-0" x-text="['🥇','🥈','🥉'][i] || `${i + 1}.`"></span>
+                    <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0" :style="`background:${g.cat.color}1a; color:${g.cat.color}`">
+                      <i :data-lucide="g.cat.icon" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate" x-text="g.description || g.cat.label"></p>
+                      <p class="text-xs text-slate-400" x-text="`${g.cat.label} · ${tableDate(g.date)}`"></p>
+                    </div>
+                    <span class="font-semibold tabular-nums text-sm shrink-0">−<span x-text="fmt(g.amount)"></span></span>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <!-- Proyección estimada -->
+            <section class="col-span-12 card">
+              <h3 class="font-bold mb-5">Proyección de ahorro anual</h3>
+              <div class="grid grid-cols-12 gap-5">
+                <template x-for="p in projection" :key="p.month">
+                  <div class="col-span-6 sm:col-span-3 lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-3.5">
+                    <p class="text-xs text-slate-400 uppercase tracking-wide" x-text="p.label"></p>
+                    <p class="text-sm font-bold tabular-nums mt-1" :class="p.value >= 0 ? 'text-accent' : 'text-rose-500'" x-text="fmt(p.value)"></p>
+                    <p class="text-[11px] text-slate-400 mt-0.5" x-text="`${p.month === viewMonth ? 'Actual' : 'Estimado'}`"></p>
+                  </div>
+                </template>
+              </div>
+              <p class="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Proyección estimada a partir de tus ingresos y gastos del año. No es una garantía de ahorro.</p>
+            </section>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: METAS -->
+        <!-- ===================================================== -->
+        <section id="view-metas" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Metas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Objetivos de ahorro y su progreso.</p>
+            </div>
+            <button @click="openGoalModal()" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva meta
+            </button>
+          </div>
+
+          <template x-if="goalList.length === 0">
+            <div class="card text-center py-12">
+              <i data-lucide="target" class="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+              <p class="text-sm text-slate-400 mb-1">Aún no tienes metas.</p>
+              <button @click="openGoalModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Crear la primera meta</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="g in goalList" :key="g.id">
+              <div class="col-span-12 md:col-span-6 xl:col-span-4 card p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-10 h-10 rounded-2xl grid place-items-center shrink-0" :style="`background:${g.color}1a;color:${g.color}`">
+                      <i :data-lucide="g.icon" class="w-5 h-5"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-sm truncate" x-text="g.name"></p>
+                      <p class="text-xs text-slate-400" x-text="g.targetDate ? `Meta: ${formatDate(g.targetDate)}` : 'Sin fecha límite'"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button @click="openGoalModal(g)" class="btn-icon w-8 h-8" title="Editar meta"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteGoal(g)" class="btn-icon w-8 h-8 text-rose-400 hover:text-rose-500" title="Eliminar meta"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="text-slate-400" x-text="`${g.pct}% logrado`"></span>
+                    <span class="font-semibold tabular-nums" x-text="fmt(g.saved)"></span>
+                  </div>
+                  <div class="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500" :style="`width:${g.pct}%;background:${g.color}`"></div>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5" x-text="`Faltan ${fmt(Math.max(0, g.target - g.saved))} de ${fmt(g.target)}`"></p>
+                  <p class="text-xs mt-0.5" x-show="g.daysLeft != null" :class="g.daysLeft >= 0 ? 'text-slate-400' : 'text-amber-500'"
+                    x-text="g.daysLeft >= 0 ? `${g.daysLeft} día(s) restantes` : 'Fecha límite vencida'"></p>
+                </div>
+
+                <button @click="openGoalContribution(g)" class="w-full btn-ghost py-2 text-sm"><i data-lucide="coins" class="w-4 h-4 text-accent"></i> Aportar / Retirar</button>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: DEUDAS -->
+        <!-- ===================================================== -->
+        <section id="view-deudas" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Deudas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Seguimiento de obligaciones y pagos.</p>
+            </div>
+            <button @click="openDebtModal()" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva deuda
+            </button>
+          </div>
+
+          <template x-if="debtList.length === 0">
+            <div class="card text-center py-12">
+              <i data-lucide="banknote" class="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+              <p class="text-sm text-slate-400 mb-1">Aún no tienes deudas registradas.</p>
+              <button @click="openDebtModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Registrar una deuda</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="d in debtList" :key="d.id">
+              <div class="col-span-12 lg:col-span-6 card p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-10 h-10 rounded-2xl grid place-items-center shrink-0" :style="`background:${d.color}1a;color:${d.color}`">
+                      <i :data-lucide="d.icon" class="w-5 h-5"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-sm truncate" x-text="d.name"></p>
+                      <p class="text-xs text-slate-400 truncate" x-text="d.creditor || (d.status === 'pagada' ? 'Pagada' : 'Deuda activa')"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button @click="openDebtModal(d)" class="btn-icon w-8 h-8" title="Editar deuda"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteDebt(d)" class="btn-icon w-8 h-8 text-rose-400 hover:text-rose-500" title="Eliminar deuda"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="text-slate-400" x-text="`${d.pct}% pagado`"></span>
+                    <span class="font-semibold tabular-nums text-rose-500" x-text="fmt(d.balance)"></span>
+                  </div>
+                  <div class="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500 bg-rose-500" :style="`width:${d.pct}%`"></div>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5" x-text="`De ${fmt(d.original)} · Cuota ${fmt(d.quota)}`"></p>
+                  <p class="text-xs mt-0.5" x-show="d.status === 'activa' && d.daysUntil != null"
+                    :class="d.daysUntil >= 0 && d.daysUntil <= 7 ? 'text-amber-500' : 'text-slate-400'"
+                    x-text="d.nextDate ? `Próximo pago: ${formatDate(d.nextDate)} (${d.daysUntil} día(s))` : ''"></p>
+                  <p class="text-xs text-emerald-500 mt-0.5" x-show="d.status === 'pagada'">✓ Deuda pagada</p>
+                </div>
+
+                <div class="flex gap-2">
+                  <button @click="openDebtPayment(d)" x-show="d.status !== 'pagada'" class="flex-1 btn-ghost py-2 text-sm"><i data-lucide="wallet" class="w-4 h-4 text-accent"></i> Pagar cuota</button>
+                  <button @click="markDebtPaid(d)" x-show="d.status !== 'pagada'" class="btn-ghost py-2 text-sm text-emerald-500"><i data-lucide="check-check" class="w-4 h-4"></i> Pagada</button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: PATRIMONIO -->
+        <!-- ===================================================== -->
+        <section id="view-patrimonio" x-cloak class="scroll-mt-24 space-y-6">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight">Patrimonio</h2>
+            <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="landmark" class="w-3.5 h-3.5"></i> Patrimonio neto</p>
+              <p class="text-2xl font-extrabold tabular-nums" :class="patrimonio.netWorth >= 0 ? 'text-accent' : 'text-rose-500'" x-text="fmt(patrimonio.netWorth)"></p>
+              <p class="text-xs text-slate-400">Activos menos pasivos.</p>
+            </div>
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="wallet" class="w-3.5 h-3.5"></i> Activos</p>
+              <p class="text-2xl font-extrabold tabular-nums text-emerald-500" x-text="fmt(patrimonio.assets)"></p>
+              <p class="text-xs text-slate-400">Suma de tus cuentas.</p>
+            </div>
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="banknote" class="w-3.5 h-3.5"></i> Pasivos</p>
+              <p class="text-2xl font-extrabold tabular-nums text-rose-500" x-text="fmt(patrimonio.liabilities)"></p>
+              <p class="text-xs text-slate-400">Deudas pendientes.</p>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="font-bold">Evolución estimada del patrimonio</h3>
+              <span class="text-xs text-slate-400">Año <span x-text="viewYear"></span></span>
+            </div>
+            <div class="h-64">
+              <canvas id="patrimonioChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Los meses futuros son una proyección estimada según tus ingresos y gastos actuales del año.</p>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: CALENDARIO -->
+        <!-- ===================================================== -->
+        <section id="view-calendario" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Calendario</h2>
+              <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+            </div>
+            <button @click="goToToday" class="btn-ghost"><i data-lucide="calendar-days" class="w-4 h-4 text-accent"></i> Ir a hoy</button>
+          </div>
+
+          <!-- Leyenda y totales -->
+          <div class="card p-5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-100 dark:bg-slate-800"></span> Sin gastos</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background:rgba(244,63,94,.25)"></span> Bajo</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background:rgba(244,63,94,.55)"></span> Medio</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background:rgba(244,63,94,.9)"></span> Alto</span>
+            </div>
+            <div class="flex items-center gap-5 text-sm">
+              <span>Total mes: <b class="tabular-nums" x-text="fmt(calendarMonthTotal)"></b></span>
+              <span class="text-slate-400" x-text="`${calendarSpendDays} día(s) con gastos`"></span>
+            </div>
+          </div>
+
+          <!-- Cuadrícula -->
+          <div class="card p-5">
+            <div class="grid grid-cols-7 gap-1 mb-2">
+              <template x-for="(wd, i) in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="i">
+                <div class="text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 py-1" x-text="wd"></div>
+              </template>
+            </div>
+            <div class="grid grid-cols-7 gap-1">
+              <template x-for="(c, i) in calendarCells" :key="i">
+                <div>
+                  <template x-if="!c.empty">
+                    <div @click="selectedDay = c.date"
+                      class="min-h-[76px] sm:min-h-[96px] rounded-2xl border p-2 cursor-pointer transition hover:-translate-y-0.5 hover:shadow-md"
+                      :class="c.date === selectedDay ? 'border-accent ring-2 ring-accent/30' : c.isToday ? 'border-accent/60' : 'border-slate-100 dark:border-slate-800'"
+                      :style="c.total > 0 ? `background:rgba(244,63,94,${0.05 + c.ratio * 0.45})` : ''">
+                      <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-semibold tabular-nums" :class="c.isToday ? 'text-accent' : ''" x-text="c.day"></span>
+                        <span x-show="c.count > 0" class="w-4 h-4 rounded-full bg-white/70 dark:bg-slate-700/70 text-[9px] font-bold text-slate-500 dark:text-slate-300 grid place-items-center" x-text="c.count"></span>
+                      </div>
+                      <p x-show="c.total > 0" class="text-[10px] sm:text-[11px] font-semibold tabular-nums truncate" :class="c.ratio > 0.6 ? 'text-white/90' : 'text-slate-600 dark:text-slate-300'" x-text="compactFmt(c.total)"></p>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Detalle del día -->
+          <div class="card p-5">
+            <template x-if="selectedDay">
+              <div>
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <h3 class="font-bold flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-accent"></i> <span x-text="dateLabel(selectedDay)"></span></h3>
+                  <span class="chip bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px]"
+                    x-text="`${selectedDayTx.filter(t => t.kind === 'expense').reduce((s, t) => s + t.rec.amount, 0) > 0 ? 'Gastado ' + fmt(selectedDayTx.filter(t => t.kind === 'expense').reduce((s, t) => s + t.rec.amount, 0)) : 'Sin gastos'}`"></span>
+                </div>
+                <template x-if="selectedDayTx.length === 0">
+                  <p class="text-sm text-slate-400 py-6 text-center">Sin movimientos este día. <button @click="openTxModal('expense')" class="text-accent font-semibold hover:underline">Registrar uno</button></p>
+                </template>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <template x-for="t in selectedDayTx" :key="t.rec.id">
+                    <li class="flex items-center gap-3 py-3">
+                      <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0"
+                        :class="t.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : t.kind === 'transfer' ? 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400' : ''"
+                        :style="t.kind === 'expense' ? `background:${t.cat.color}1a; color:${t.cat.color}` : ''">
+                        <i x-show="t.kind === 'income'" data-lucide="arrow-down-left" class="w-4 h-4"></i>
+                        <i x-show="t.kind === 'transfer'" data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                        <i x-show="t.kind === 'expense'" :data-lucide="t.cat.icon" class="w-4 h-4"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm truncate" x-text="t.rec.description || (t.kind === 'income' ? 'Ingreso' : t.kind === 'transfer' ? 'Transferencia' : t.cat.label)"></p>
+                        <p class="text-xs text-slate-400 truncate" x-text="`${t.acct.name}${t.toAcct ? ' → ' + t.toAcct.name : ''}`"></p>
+                      </div>
+                      <span class="font-semibold tabular-nums text-sm" :class="t.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : t.kind === 'transfer' ? 'text-sky-500' : ''">
+                        <span x-show="t.kind === 'income'">+</span><span x-show="t.kind === 'expense'">−</span><span x-text="fmt(t.rec.amount)"></span>
+                      </span>
+                      <button @click="removeTx(t)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </template>
+            <template x-if="!selectedDay">
+              <p class="text-sm text-slate-400 py-4 text-center">Selecciona un día del calendario para ver sus movimientos.</p>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: RECURRENTES -->
+        <!-- ===================================================== -->
+        <section id="view-recurrentes" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Pagos recurrentes</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Suscripciones y pagos fijos. Al llegar la fecha, regístralos como gasto.</p>
+            </div>
+            <button @click="openRecModal()" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nuevo recurrente
+            </button>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <span class="chip" :class="pendingCount > 0 ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+              <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i> <span x-text="pendingCount"></span> pendiente(s)
+            </span>
+            <span class="chip bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span x-text="upcomingCount"></span> próximos (7 días)
+            </span>
+            <span class="chip bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <i data-lucide="repeat" class="w-3.5 h-3.5"></i> <span x-text="recurringList.filter(r => r.rec.active).length"></span> activos
+            </span>
+          </div>
+
+          <template x-if="recurringList.length === 0">
+            <div class="card text-center py-16">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                <i data-lucide="repeat" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+              </div>
+              <p class="font-semibold">Sin pagos recurrentes</p>
+              <p class="text-sm text-slate-400 mt-1 mb-5">Registra tus suscripciones y pagos fijos para recordarlos cada mes.</p>
+              <button @click="openRecModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Agregar recurrente</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="item in recurringList" :key="item.rec.id">
+              <div class="col-span-12 md:col-span-6 card">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-11 h-11 rounded-2xl grid place-items-center shrink-0"
+                    :class="item.pending ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-800'"
+                    :style="!item.pending ? `background:${item.cat.color}1a; color:${item.cat.color}` : ''">
+                    <i :data-lucide="item.pending ? 'bell-ring' : item.cat.icon" class="w-5 h-5"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold truncate" x-text="item.rec.name"></p>
+                    <p class="text-xs text-slate-400" x-text="`${item.cat.label} · ${item.acct.name}`"></p>
+                  </div>
+                  <span class="font-bold tabular-nums text-lg" x-text="fmt(item.rec.amount)"></span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                  <span class="chip bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <i data-lucide="repeat" class="w-3 h-3"></i> <span x-text="frequencyLabel(item.rec.frequency)"></span>
+                  </span>
+                  <span class="chip text-[11px]" :class="item.pending ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : item.rec.active ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'">
+                    <i :data-lucide="item.pending ? 'bell-ring' : item.rec.active ? 'calendar-check' : 'pause'" class="w-3 h-3"></i>
+                    <span x-text="item.pending ? '🔔 Pago pendiente' : item.rec.active ? `Próximo: ${formatDate(item.rec.nextDate)}` : 'Inactivo'"></span>
+                  </span>
+                  <template x-if="item.rec.active && !item.pending && item.daysUntil <= 7">
+                    <span class="chip bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 text-[11px]">
+                      <i data-lucide="clock" class="w-3 h-3"></i> <span x-text="item.daysUntil === 0 ? 'Hoy' : `${item.daysUntil} día(s)`"></span>
+                    </span>
+                  </template>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <template x-if="item.pending">
+                    <div class="flex gap-2">
+                      <button @click="registerRecurring(item)" class="inline-flex items-center gap-1.5 rounded-xl bg-accent text-white px-3 py-1.5 text-xs font-semibold transition hover:brightness-110 active:scale-95">
+                        <i data-lucide="circle-check" class="w-3.5 h-3.5"></i> Registrar gasto
+                      </button>
+                      <button @click="skipRecurring(item)" class="btn-ghost py-1.5 px-3 text-xs" title="Saltar este ciclo">
+                        <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i> Saltar
+                      </button>
+                    </div>
+                  </template>
+                  <div class="flex items-center gap-1 ml-auto">
+                    <button @click="toggleRecurring(item)" class="btn-icon w-8 h-8" :title="item.rec.active ? 'Desactivar' : 'Activar'">
+                      <i :data-lucide="item.rec.active ? 'pause' : 'play'" class="w-4 h-4"></i>
+                    </button>
+                    <button @click="openRecModal(item.rec)" class="btn-icon w-8 h-8" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteRecurring(item)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- VISTA: CATEGORÍAS -->
+        <!-- ===================================================== -->
+        <section id="view-categorias" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Categorías</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Organiza tus gastos. No se eliminan categorías con movimientos sin reasignarlos.</p>
+            </div>
+            <button @click="openCatModal()" class="inline-flex items-center gap-2 rounded-2xl bg-accent text-white px-4 py-2 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-95">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva categoría
+            </button>
+          </div>
+
+          <div class="grid grid-cols-12 gap-4">
+            <template x-for="c in categories" :key="c.id">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3 card p-4 group">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl grid place-items-center shrink-0" :style="`background:${c.color}1a; color:${c.color}`">
+                    <i :data-lucide="c.icon" class="w-5 h-5"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate" x-text="c.label"></p>
+                    <p class="text-xs text-slate-400" x-text="`${categoryUsage(c.id)} movimiento(s)`"></p>
+                  </div>
+                  <span class="text-lg" x-text="c.emoji"></span>
+                </div>
+                <div class="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                  <button @click="openCatModal(c)" class="btn-icon w-8 h-8" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                  <button @click="deleteCategory(c)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        </div><!-- /Página principal -->
+
+        <!-- ===================================================== -->
+        <!-- CONFIGURACIÓN (pantalla aparte, desde el perfil) -->
+        <!-- ===================================================== -->
+        <section x-show="showConfig" x-cloak class="space-y-6 max-w-3xl">
+          <div class="flex items-center gap-3">
+            <button @click="closeConfig" class="btn-icon shrink-0" title="Volver">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Configuración</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Preferencias y administración de tus datos.</p>
+            </div>
+          </div>
+
+          <!-- Apariencia -->
+          <div class="card space-y-6">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-accent"></i> Apariencia</h3>
+
+            <div>
+              <span class="form-label">Color de acento</span>
+              <div class="flex flex-wrap gap-2.5">
+                <template x-for="p in config.accentPresets" :key="p.value">
+                  <button @click="accent = p.value" :title="p.name"
+                    class="w-9 h-9 rounded-full transition ring-offset-2 ring-offset-white dark:ring-offset-slate-900 hover:scale-110"
+                    :class="accent === p.value ? 'ring-2' : ''"
+                    :style="`background:${p.value}; --tw-ring-color:${p.value}`"></button>
+                </template>
+                <label class="w-9 h-9 rounded-full grid place-items-center border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer text-slate-400 hover:text-accent hover:border-accent transition" title="Color personalizado">
+                  <i data-lucide="pipette" class="w-4 h-4"></i>
+                  <input type="color" x-model="accent" class="sr-only">
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <span class="form-label">Tema</span>
+              <div class="grid grid-cols-3 gap-2">
+                <template x-for="m in [{v:'light',i:'sun',t:'Claro'},{v:'dark',i:'moon',t:'Oscuro'},{v:'system',i:'monitor',t:'Sistema'}]" :key="m.v">
+                  <button @click="mode = m.v"
+                    class="flex flex-col items-center gap-1.5 py-3 rounded-2xl border text-xs font-medium transition"
+                    :class="mode === m.v ? 'border-accent bg-accent/10 text-accent' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <i :data-lucide="m.i" class="w-5 h-5"></i>
+                    <span x-text="m.t"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard -->
+          <div class="card space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="font-bold flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4 text-accent"></i> Dashboard</h3>
+              <button @click="resetWidgets" class="text-xs font-semibold text-accent hover:underline">Restablecer widgets</button>
+            </div>
+            <p class="text-sm text-slate-400">Elige qué secciones se muestran en el inicio. Se guarda automáticamente.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <template x-for="w in widgetDefs" :key="w.id">
+                <button @click="toggleWidget(w.id)"
+                  class="flex items-center gap-3 px-3.5 py-3 rounded-2xl border text-sm font-medium transition"
+                  :class="widgetOn(w.id) ? 'border-accent/40 bg-accent/5 text-slate-700 dark:text-slate-200' : 'border-slate-200 dark:border-slate-700 text-slate-400'">
+                  <i :data-lucide="w.icon" class="w-4 h-4" :class="widgetOn(w.id) ? 'text-accent' : ''"></i>
+                  <span class="flex-1 text-left" x-text="w.label"></span>
+                  <span class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition"
+                    :class="widgetOn(w.id) ? 'bg-accent' : 'bg-slate-200 dark:bg-slate-700'">
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                      :class="widgetOn(w.id) ? 'translate-x-5' : ''"></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Preferencias -->
+          <div class="card space-y-5">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-accent"></i> Preferencias</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="form-label">Moneda principal</label>
+                <select class="field text-sm" :value="state.settings.currency" @change="setCurrency($event.target.value)">
+                  <option value="COP">COP — Peso colombiano</option>
+                  <option value="MXN">MXN — Peso mexicano</option>
+                  <option value="USD">USD — Dólar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="PEN">PEN — Sol peruano</option>
+                  <option value="CLP">CLP — Peso chileno</option>
+                  <option value="ARS">ARS — Peso argentino</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Idioma</label>
+                <select class="field text-sm" :value="state.settings.locale" @change="setLocale($event.target.value)">
+                  <option value="es-CO">Español (Colombia)</option>
+                  <option value="es-MX">Español (México)</option>
+                  <option value="es-ES">Español (España)</option>
+                  <option value="en-US">English (US)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Formato de fecha</label>
+                <select class="field text-sm" :value="state.settings.dateFormat" @change="setDateFormat($event.target.value)">
+                  <option value="dd/mm/yyyy">DD/MM/AAAA</option>
+                  <option value="mm/dd/yyyy">MM/DD/AAAA</option>
+                  <option value="yyyy-mm-dd">AAAA-MM-DD</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Presupuesto mensual</label>
+              <div class="flex items-center gap-3">
+                <input type="range" min="0" max="10000000" step="100000" :value="state.budget" @input="setBudget($event.target.value)" class="flex-1 accent-emerald-500">
+                <input type="number" min="0" step="10000" :value="state.budget" @change="setBudget($event.target.value)" class="w-40 field text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos -->
+          <div class="card space-y-4">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-accent"></i> Datos y respaldo</h3>
+            <p class="text-sm text-slate-400">Todos tus datos se guardan localmente en tu navegador. Crea respaldos periódicamente y revisa el historial de restauración.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button @click="saveManualBackup" class="btn-ghost justify-center"><i data-lucide="hard-drive-download" class="w-4 h-4 text-accent"></i> Guardar respaldo ahora</button>
+              <button @click="analyzeData" class="btn-ghost justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Analizar datos</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button @click="doExport" class="btn-ghost justify-center"><i data-lucide="download" class="w-4 h-4 text-accent"></i> Exportar JSON</button>
+              <button @click="doExportCSV" class="btn-ghost justify-center"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-accent"></i> Exportar CSV</button>
+              <button @click="doExportMonthly" class="btn-ghost justify-center"><i data-lucide="file-text" class="w-4 h-4 text-accent"></i> Resumen mensual</button>
+            </div>
+
+            <div>
+              <label class="btn-ghost justify-center w-full cursor-pointer">
+                <i data-lucide="upload" class="w-4 h-4 text-accent"></i> Importar backup (JSON)
+                <input type="file" accept=".json" class="hidden" @change="doImport">
+              </label>
+              <p class="text-xs text-slate-400 mt-1.5 text-center">La importación reemplazará tus datos actuales.</p>
+            </div>
+
+            <!-- Historial de respaldos -->
+            <div x-show="backups.length" class="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-accent"></i> Historial de respaldos</span>
+                <span class="text-xs text-slate-400" x-text="backups.length + ' punto(s) de restauración'"></span>
+              </div>
+              <ul class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                <template x-for="b in backups" :key="b.id">
+                  <li class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 px-3 py-2.5">
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium truncate" x-text="b.label"></p>
+                      <p class="text-xs text-slate-400" x-text="b.createdAt.slice(0, 16).replace('T', ' ') + ' · ' + b.sizeLabel"></p>
+                    </div>
+                    <div class="flex gap-1.5 shrink-0">
+                      <button @click="restoreBackupFromHistory(b.id)" class="btn-icon w-8 h-8" title="Restaurar"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                      <button @click="deleteBackup(b.id)" class="btn-icon w-8 h-8" title="Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+              <p class="text-xs text-slate-400 mt-2">Antes de restaurar se crea automáticamente un respaldo de seguridad de tus datos actuales.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button @click="loadDemo" class="btn-ghost justify-center text-accent border-accent/30"><i data-lucide="sparkles" class="w-4 h-4"></i> Cargar datos de ejemplo</button>
+              <button @click="resetData" class="btn-ghost justify-center text-rose-500 border-rose-200 dark:border-rose-500/30"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restablecer todo</button>
+            </div>
+          </div>
+
+          <div class="card space-y-3">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-accent"></i> Actividad reciente</h3>
+            <template x-if="activityLog.length === 0">
+              <p class="text-sm text-slate-400">Aún no hay actividad registrada.</p>
+            </template>
+            <ul class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+              <template x-for="a in activityLog" :key="a.id">
+                <li class="flex items-start gap-3">
+                  <span class="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" :class="activityDot(a.type)"></span>
+                  <div class="min-w-0">
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-snug" x-text="a.text"></p>
+                    <p class="text-xs text-slate-400" x-text="formatDateTime(a.timestamp)"></p>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <div class="card bg-slate-50 dark:bg-slate-800/40 border-dashed space-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <p class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Tus datos nunca salen de tu dispositivo.</p>
+            <p class="flex items-center gap-2"><i data-lucide="info" class="w-4 h-4 text-accent"></i> Personalización avanzada: edita <code class="text-accent font-mono">theme.config.js</code> y <code class="text-accent font-mono">src/categories.js</code>.</p>
+          </div>
+
+          <!-- Privacidad -->
+          <div class="card space-y-5">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4 text-accent"></i> Privacidad y seguridad</h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="form-label">PIN de bloqueo (4 a 6 dígitos)</label>
+                <div class="flex gap-2">
+                  <input type="password" inputmode="numeric" maxlength="6" x-model="pinDraft" placeholder="••••" class="field flex-1" :disabled="state.privacy.pinEnabled">
+                  <button @click="setPin(!state.privacy.pinEnabled)" class="btn-ghost shrink-0"
+                    :class="state.privacy.pinEnabled ? 'text-rose-500' : 'text-accent'">
+                    <i :data-lucide="state.privacy.pinEnabled ? 'lock-open' : 'lock'" class="w-4 h-4"></i>
+                    <span x-text="state.privacy.pinEnabled ? 'Desactivar' : 'Activar'"></span>
+                  </button>
+                </div>
+                <p class="text-xs text-slate-400 mt-1.5">Al activarlo, la app se bloqueará tras el periodo de inactividad o al presionar «Bloquear ahora».</p>
+              </div>
+
+              <div x-show="state.privacy.pinEnabled">
+                <label class="form-label">Bloqueo automático tras</label>
+                <select x-model="state.privacy.autoLockMinutes" @change="_save" class="field">
+                  <option value="1">1 minuto</option>
+                  <option value="5">5 minutos</option>
+                  <option value="15">15 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                </select>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium">Ocultar montos</p>
+                  <p class="text-xs text-slate-400">Los montos se muestran como •••• hasta que los reveles.</p>
+                </div>
+                <button @click="toggleAmountsHidden" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition"
+                  :class="state.privacy.hideAmounts ? 'bg-accent' : 'bg-slate-200 dark:bg-slate-700'">
+                  <span class="inline-block w-5 h-5 transform rounded-full bg-white shadow transition"
+                    :class="state.privacy.hideAmounts ? 'translate-x-5' : 'translate-x-0.5'"></span>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium">Bloquear ahora</p>
+                  <p class="text-xs text-slate-400">Bloquea la pantalla con tu PIN inmediatamente.</p>
+                </div>
+                <button @click="lockNow" class="btn-ghost text-rose-500"><i data-lucide="lock" class="w-4 h-4"></i> Bloquear</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="text-center text-xs text-slate-400 pt-2 pb-4">
+          Tus datos se guardan localmente en tu navegador · <button @click="doExport" class="font-medium hover:text-accent">Exportar respaldo</button>
+        </footer>
+      </main>
+    </div>
+
+    <!-- ============ BOTÓN FLOTANTE (FAB) ============ -->
+    <div id="fab" class="fixed bottom-7 right-7 z-40 flex flex-col items-end">
+      <div x-show="fabOpen" x-cloak @click.outside="fabOpen = false"
+        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="mb-3 w-64 rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-2 space-y-1">
+        <p class="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Nuevo movimiento</p>
+        <button @click="openTxModal('expense')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800">
+          <span class="w-8 h-8 rounded-xl grid place-items-center bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400"><i data-lucide="credit-card" class="w-4 h-4"></i></span>
+          Agregar gasto
+        </button>
+        <button @click="openTxModal('income')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800">
+          <span class="w-8 h-8 rounded-xl grid place-items-center bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400"><i data-lucide="trending-up" class="w-4 h-4"></i></span>
+          Agregar ingreso
+        </button>
+        <button @click="openTxModal('transfer')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800">
+          <span class="w-8 h-8 rounded-xl grid place-items-center bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400"><i data-lucide="arrow-right-left" class="w-4 h-4"></i></span>
+          Transferir dinero
+        </button>
+      </div>
+      <button @click="fabOpen = !fabOpen; notifOpen = false; profileOpen = false" aria-label="Nuevo movimiento"
+        class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-400 to-emerald-600 text-white grid place-items-center shadow-lg shadow-emerald-500/30 hover:scale-105 hover:shadow-xl transition active:scale-95"
+        :class="fabOpen ? 'rotate-45' : ''">
+        <i x-show="!fabOpen" data-lucide="plus" class="w-6 h-6"></i>
+        <i x-show="fabOpen" data-lucide="x" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <!-- ============ MODAL: MOVIMIENTO ============ -->
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="modalOpen = false"></div>
+      <div x-show="modalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold tracking-tight" x-text="editingId ? 'Editar movimiento' : 'Nuevo movimiento'"></h2>
+          <button @click="modalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 mb-5 text-sm font-medium">
+          <button @click="entryType = 'expense'" class="flex-1 py-2 rounded-xl transition" :class="entryType === 'expense' ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-500' : 'text-slate-500 dark:text-slate-400'">
+            <i data-lucide="credit-card" class="w-4 h-4 inline mr-1.5"></i>Gasto
+          </button>
+          <button @click="entryType = 'income'" class="flex-1 py-2 rounded-xl transition" :class="entryType === 'income' ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-500' : 'text-slate-500 dark:text-slate-400'">
+            <i data-lucide="trending-up" class="w-4 h-4 inline mr-1.5"></i>Ingreso
+          </button>
+          <button @click="entryType = 'transfer'" class="flex-1 py-2 rounded-xl transition" :class="entryType === 'transfer' ? 'bg-white dark:bg-slate-700 shadow-sm text-sky-500' : 'text-slate-500 dark:text-slate-400'">
+            <i data-lucide="arrow-right-left" class="w-4 h-4 inline mr-1.5"></i>Transferencia
+          </button>
+        </div>
+
+        <form @submit.prevent="submitTx" class="flex flex-col gap-4">
+          <div>
+            <label class="form-label" for="amount">Monto</label>
+            <div class="flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 pl-4 transition focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15">
+              <span class="font-semibold text-slate-400">$</span>
+              <input id="amount" type="number" min="0.01" step="0.01" x-model="form.amount" placeholder="0.00" class="flex-1 bg-transparent py-3 pr-4 outline-none text-[15px] tabular-nums">
+            </div>
+          </div>
+
+          <div x-show="entryType === 'expense'">
             <label class="form-label" for="category">Categoría</label>
             <select id="category" x-model="form.category" class="field">
               <template x-for="c in categories" :key="c.id">
@@ -135,132 +1827,658 @@
               </template>
             </select>
           </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="form-label" :for="entryType === 'transfer' ? 'from' : 'account'" x-text="entryType === 'transfer' ? 'Desde' : 'Cuenta'"></label>
+              <select :id="entryType === 'transfer' ? 'from' : 'account'" x-model="form.account" class="field">
+                <template x-for="a in accounts" :key="a.id">
+                  <option :value="a.id" x-text="a.name"></option>
+                </template>
+              </select>
+            </div>
+            <div x-show="entryType === 'transfer'">
+              <label class="form-label" for="toAccount">Hacia</label>
+              <select id="toAccount" x-model="form.toAccount" class="field">
+                <template x-for="a in accounts" :key="a.id">
+                  <option :value="a.id" x-text="a.name"></option>
+                </template>
+              </select>
+            </div>
+            <div x-show="entryType !== 'transfer'">
+              <label class="form-label" for="date">Fecha</label>
+              <input id="date" type="date" x-model="form.date" class="field">
+            </div>
+            <div x-show="entryType === 'transfer'">
+              <label class="form-label" for="date">Fecha</label>
+              <input id="date" type="date" x-model="form.date" class="field">
+            </div>
+          </div>
+
           <div>
             <label class="form-label" for="description">Descripción</label>
-            <input id="description" type="text" maxlength="100" x-model="form.description" placeholder="Ej. Supermercado, Uber…" class="field">
+            <input id="description" type="text" maxlength="100" x-model="form.description" placeholder="Ej. Supermercado, Nómina…" class="field">
           </div>
+
           <div>
-            <label class="form-label" for="date">Fecha</label>
-            <input id="date" type="date" x-model="form.date" class="field">
+            <label class="form-label" for="note">Notas (opcional)</label>
+            <textarea id="note" rows="2" maxlength="500" x-model="form.note" placeholder="Detalles extra…" class="field resize-none"></textarea>
           </div>
-          <button type="submit" class="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-accent px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:brightness-110 hover:-translate-y-px active:scale-[.98]">
-            <i data-lucide="plus" class="w-[18px] h-[18px]"></i> Agregar gasto
+
+          <!-- Comprobantes -->
+          <div x-show="entryType !== 'transfer'">
+            <label class="form-label">Comprobantes (JPG, PNG o WEBP)</label>
+            <label class="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 px-4 py-5 text-sm text-slate-500 dark:text-slate-400 cursor-pointer transition hover:border-accent hover:text-accent">
+              <i data-lucide="paperclip" class="w-4 h-4"></i> Adjuntar imagen
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onReceiptFile">
+            </label>
+            <template x-if="form.receipts.length > 0">
+              <div class="flex flex-wrap gap-2 mt-2">
+                <template x-for="(r, i) in form.receipts" :key="i">
+                  <div class="relative">
+                    <img :src="r.dataUrl" alt="Comprobante pendiente" class="w-16 h-16 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
+                    <button @click="dropPendingReceipt(i)" type="button" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white grid place-items-center" title="Quitar"><i data-lucide="x" class="w-3 h-3"></i></button>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template x-if="editingId && receiptsFor(editingId).length > 0">
+              <div class="mt-2">
+                <p class="text-xs text-slate-400 mb-1.5">Adjuntados:</p>
+                <div class="flex flex-wrap gap-2">
+                  <template x-for="r in receiptsFor(editingId)" :key="r.id">
+                    <div class="relative group">
+                      <a :href="r.dataUrl" target="_blank" rel="noopener" title="Ver comprobante">
+                        <img :src="r.dataUrl" alt="Comprobante" class="w-16 h-16 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
+                      </a>
+                      <button @click="removeReceipt(editingId, r.id)" type="button" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white grid place-items-center" title="Eliminar"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <p x-show="formError" class="text-[13px] font-medium px-3.5 py-2.5 rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 flex items-center gap-2">
+            <i data-lucide="triangle-alert" class="w-4 h-4 shrink-0"></i><span x-text="formError"></span>
+          </p>
+
+          <button type="submit"
+            class="inline-flex items-center justify-center gap-2 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 hover:-translate-y-px active:scale-[.98]"
+            :class="entryType === 'income' ? 'bg-gradient-to-tr from-emerald-400 to-emerald-600 shadow-emerald-500/30' : entryType === 'transfer' ? 'bg-gradient-to-tr from-sky-400 to-sky-600 shadow-sky-500/30' : 'bg-accent shadow-accent/30'">
+            <i :data-lucide="entryType === 'income' ? 'arrow-down-left' : entryType === 'transfer' ? 'arrow-right-left' : 'plus'" class="w-[18px] h-[18px]"></i>
+            <span x-text="editingId ? 'Guardar cambios' : entryType === 'income' ? 'Registrar ingreso' : entryType === 'transfer' ? 'Registrar transferencia' : 'Registrar gasto'"></span>
           </button>
         </form>
-      </section>
-
-      <section class="card">
-        <h2 class="font-semibold mb-5">Por categoría</h2>
-        <template x-if="breakdown.length === 0">
-          <p class="text-center text-sm text-zinc-400 py-6">Sin gastos este mes.</p>
-        </template>
-        <ul class="flex flex-col gap-4">
-          <template x-for="b in breakdown" :key="b.cat.id">
-            <li class="anim-item">
-              <div class="flex justify-between text-sm font-medium mb-2">
-                <span class="flex items-center gap-2">
-                  <i :data-lucide="b.cat.icon" class="w-4 h-4" :style="`color:${b.cat.color}`"></i>
-                  <span x-text="b.cat.label"></span>
-                </span>
-                <span class="tabular-nums" x-text="fmt(b.amount)"></span>
-              </div>
-              <div class="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${b.pct}%; background:${b.cat.color}`"></div>
-              </div>
-            </li>
-          </template>
-        </ul>
-      </section>
+      </div>
     </div>
 
-    <!-- Historial -->
-    <section class="card mt-5 anim-rise">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="font-semibold">Historial</h2>
-        <span class="text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2.5 py-1 rounded-full"
-          x-text="`${sortedExpenses.length} ${sortedExpenses.length === 1 ? 'gasto' : 'gastos'}`"></span>
-      </div>
-      <template x-if="sortedExpenses.length === 0">
-        <p class="text-center text-sm text-zinc-400 py-6">Aún no has registrado gastos este mes.</p>
-      </template>
-      <ul class="flex flex-col gap-0.5">
-        <template x-for="e in sortedExpenses" :key="e.id">
-          <li class="group flex items-center gap-3.5 px-2 py-2.5 rounded-xl transition hover:bg-zinc-50 dark:hover:bg-zinc-800/60 anim-item">
-            <div class="w-10 h-10 rounded-xl grid place-items-center shrink-0" :style="`background:${cat(e.category).color}1a; color:${cat(e.category).color}`">
-              <i :data-lucide="cat(e.category).icon" class="w-[18px] h-[18px]"></i>
+    <!-- ============ MODAL: CUENTA ============ -->
+    <div x-show="accountModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="accountModalOpen = false"></div>
+      <div x-show="accountModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold tracking-tight" x-text="accountForm?.id ? 'Editar cuenta' : 'Nueva cuenta'"></h2>
+          <button @click="accountModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <template x-if="accountForm">
+          <form @submit.prevent="submitAccount" class="flex flex-col gap-4">
+            <div>
+              <label class="form-label">Nombre</label>
+              <input type="text" x-model="accountForm.name" maxlength="40" placeholder="Ej. Banco principal" class="field">
             </div>
-            <div class="flex-1 min-w-0">
-              <span class="block font-medium text-[15px] truncate" x-text="e.description || cat(e.category).label"></span>
-              <span class="text-xs text-zinc-400" x-text="`${cat(e.category).label} · ${dateLabel(e.date)}`"></span>
+
+            <div>
+              <label class="form-label">Tipo</label>
+              <select x-model="accountForm.type" class="field" @change="accountForm.icon = accountTypes.find(t => t.id === accountForm.type)?.icon ?? accountForm.icon">
+                <template x-for="t in accountTypes" :key="t.id">
+                  <option :value="t.id" x-text="t.label"></option>
+                </template>
+              </select>
             </div>
-            <span class="font-semibold text-[15px] tabular-nums whitespace-nowrap" x-text="fmt(e.amount)"></span>
-            <button @click="removeExpense(e.id)" title="Eliminar"
-              class="w-8 h-8 rounded-full grid place-items-center text-zinc-400 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/40">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
+
+            <div>
+              <span class="form-label">Icono</span>
+              <div class="flex flex-wrap gap-1.5">
+                <template x-for="ic in accountIcons" :key="ic">
+                  <button type="button" @click="accountForm.icon = ic" class="w-9 h-9 rounded-xl grid place-items-center transition"
+                    :class="accountForm.icon === ic ? 'bg-accent text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'">
+                    <i :data-lucide="ic" class="w-4 h-4"></i>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <div>
+              <span class="form-label">Color</span>
+              <div class="flex flex-wrap gap-2">
+                <template x-for="p in config.accentPresets" :key="p.value">
+                  <button type="button" @click="accountForm.color = p.value" class="w-7 h-7 rounded-full transition hover:scale-110"
+                    :class="accountForm.color === p.value ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''"
+                    :style="`background:${p.value}; --tw-ring-color:${p.value}`"></button>
+                </template>
+                <label class="w-7 h-7 rounded-full grid place-items-center border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer text-slate-400" title="Personalizado">
+                  <i data-lucide="pipette" class="w-3.5 h-3.5"></i>
+                  <input type="color" x-model="accountForm.color" class="sr-only">
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Saldo inicial</label>
+              <div class="flex items-center gap-2">
+                <input type="number" step="0.01" x-model="accountForm.balance" class="field flex-1 tabular-nums">
+              </div>
+              <div class="flex items-center gap-1.5 mt-2">
+                <button type="button" @click="adjustBalance(-100000)" class="btn-ghost py-1 px-2.5 text-xs">−100k</button>
+                <button type="button" @click="adjustBalance(-10000)" class="btn-ghost py-1 px-2.5 text-xs">−10k</button>
+                <button type="button" @click="adjustBalance(10000)" class="btn-ghost py-1 px-2.5 text-xs">+10k</button>
+                <button type="button" @click="adjustBalance(100000)" class="btn-ghost py-1 px-2.5 text-xs">+100k</button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="form-label mb-0">Estado</span>
+                <p class="text-xs text-slate-400" x-text="accountForm.status === 'activa' ? 'Visible en el balance y movimientos' : 'Oculta de los totales activos'"></p>
+              </div>
+              <button type="button" @click="accountForm.status = accountForm.status === 'activa' ? 'inactiva' : 'activa'"
+                class="relative w-12 h-7 rounded-full transition" :class="accountForm.status === 'activa' ? 'bg-accent' : 'bg-slate-300 dark:bg-slate-600'">
+                <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all" :class="accountForm.status === 'activa' ? 'left-6' : 'left-1'"></span>
+              </button>
+            </div>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-2 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-white bg-accent shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-[.98]">
+              <i data-lucide="check" class="w-[18px] h-[18px]"></i>
+              <span x-text="accountForm.id ? 'Guardar cambios' : 'Crear cuenta'"></span>
             </button>
-          </li>
+          </form>
         </template>
-      </ul>
-    </section>
-
-    <footer class="text-center text-xs text-zinc-400 mt-6">
-      Tus datos se guardan localmente en tu navegador.
-    </footer>
-
-    <!-- Panel de personalización -->
-    <div x-show="settingsOpen" x-transition.opacity @click="settingsOpen = false" x-cloak
-      class="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"></div>
-    <aside x-show="settingsOpen" x-cloak
-      x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-      x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
-      class="fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl z-50 p-6 overflow-y-auto">
-      <div class="flex items-center justify-between mb-7">
-        <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="palette" class="w-5 h-5 text-accent"></i> Personalizar</h2>
-        <button @click="settingsOpen = false" class="btn-icon" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
+    </div>
 
-      <div class="mb-7">
-        <span class="form-label">Color de acento</span>
-        <div class="flex flex-wrap gap-2.5">
-          <template x-for="p in config.accentPresets" :key="p.value">
-            <button @click="accent = p.value" :title="p.name"
-              class="w-9 h-9 rounded-full transition ring-offset-2 ring-offset-white dark:ring-offset-zinc-900 hover:scale-110"
-              :class="accent === p.value ? 'ring-2' : ''"
-              :style="`background:${p.value}; --tw-ring-color:${p.value}`"></button>
-          </template>
-          <label class="w-9 h-9 rounded-full grid place-items-center border-2 border-dashed border-zinc-300 dark:border-zinc-600 cursor-pointer text-zinc-400 hover:text-accent hover:border-accent transition" title="Color personalizado">
-            <i data-lucide="pipette" class="w-4 h-4"></i>
-            <input type="color" x-model="accent" class="sr-only">
-          </label>
+    <!-- ============ MODAL: CATEGORÍA ============ -->
+    <div x-show="catModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="catModalOpen = false"></div>
+      <div x-show="catModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold tracking-tight" x-text="catForm?.id ? 'Editar categoría' : 'Nueva categoría'"></h2>
+          <button @click="catModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-      </div>
 
-      <div class="mb-7">
-        <span class="form-label">Tema</span>
-        <div class="grid grid-cols-3 gap-2">
-          <template x-for="m in [{v:'light',i:'sun',t:'Claro'},{v:'dark',i:'moon',t:'Oscuro'},{v:'system',i:'monitor',t:'Sistema'}]" :key="m.v">
-            <button @click="mode = m.v"
-              class="flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-medium transition"
-              :class="mode === m.v ? 'border-accent bg-accent/10 text-accent' : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800'">
-              <i :data-lucide="m.i" class="w-5 h-5"></i>
-              <span x-text="m.t"></span>
+        <template x-if="catForm">
+          <form @submit.prevent="submitCategory" class="flex flex-col gap-4">
+            <div>
+              <label class="form-label">Nombre</label>
+              <input type="text" x-model="catForm.label" maxlength="30" placeholder="Ej. Alimentación" class="field">
+            </div>
+
+            <div>
+              <label class="form-label">Emoji</label>
+              <input type="text" x-model="catForm.emoji" maxlength="4" placeholder="🍽️" class="field">
+            </div>
+
+            <div>
+              <span class="form-label">Icono</span>
+              <div class="flex flex-wrap gap-1.5">
+                <template x-for="ic in ['utensils','bus','clapperboard','shopping-bag','heart-pulse','graduation-cap','smartphone','house','repeat','package','tag','gift','book','dumbbell','plane','gamepad-2','music','coffee','dog','baby']" :key="ic">
+                  <button type="button" @click="catForm.icon = ic" class="w-9 h-9 rounded-xl grid place-items-center transition"
+                    :class="catForm.icon === ic ? 'bg-accent text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'">
+                    <i :data-lucide="ic" class="w-4 h-4"></i>
+                  </button>
+                </template>
+              </div>
+            </div>
+
+            <div>
+              <span class="form-label">Color</span>
+              <div class="flex flex-wrap gap-2">
+                <template x-for="p in config.accentPresets" :key="p.value">
+                  <button type="button" @click="catForm.color = p.value" class="w-7 h-7 rounded-full transition hover:scale-110"
+                    :class="catForm.color === p.value ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''"
+                    :style="`background:${p.value}; --tw-ring-color:${p.value}`"></button>
+                </template>
+                <label class="w-7 h-7 rounded-full grid place-items-center border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer text-slate-400" title="Personalizado">
+                  <i data-lucide="pipette" class="w-3.5 h-3.5"></i>
+                  <input type="color" x-model="catForm.color" class="sr-only">
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-2 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-white bg-accent shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-[.98]">
+              <i data-lucide="check" class="w-[18px] h-[18px]"></i>
+              <span x-text="catForm.id ? 'Guardar cambios' : 'Crear categoría'"></span>
             </button>
-          </template>
+          </form>
+        </template>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: RECURRENTE ============ -->
+    <div x-show="recModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="recModalOpen = false"></div>
+      <div x-show="recModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold tracking-tight" x-text="recForm?.id ? 'Editar recurrente' : 'Nuevo recurrente'"></h2>
+          <button @click="recModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <template x-if="recForm">
+          <form @submit.prevent="submitRecurring" class="flex flex-col gap-4">
+            <div>
+              <label class="form-label">Nombre</label>
+              <input type="text" x-model="recForm.name" maxlength="60" placeholder="Ej. Netflix, Internet, Gimnasio…" class="field">
+            </div>
+
+            <div>
+              <label class="form-label">Monto</label>
+              <input type="number" min="0.01" step="0.01" x-model="recForm.amount" placeholder="0.00" class="field tabular-nums">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Categoría</label>
+                <select x-model="recForm.category" class="field">
+                  <template x-for="c in categories" :key="c.id">
+                    <option :value="c.id" x-text="`${c.emoji}  ${c.label}`"></option>
+                  </template>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Cuenta</label>
+                <select x-model="recForm.account" class="field">
+                  <template x-for="a in accounts" :key="a.id">
+                    <option :value="a.id" x-text="a.name"></option>
+                  </template>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Frecuencia</label>
+                <select x-model="recForm.frequency" class="field">
+                  <option value="mensual">Cada mes</option>
+                  <option value="semanal">Cada semana</option>
+                  <option value="quincenal">Cada quincena</option>
+                  <option value="anual">Cada año</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Próxima fecha</label>
+                <input type="date" x-model="recForm.nextDate" class="field">
+              </div>
+            </div>
+
+            <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 cursor-pointer">
+              <span class="text-sm font-medium">Activo</span>
+              <span class="relative w-12 h-7 rounded-full transition" :class="recForm.active ? 'bg-accent' : 'bg-slate-300 dark:bg-slate-600'">
+                <input type="checkbox" class="sr-only" x-model="recForm.active">
+                <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all" :class="recForm.active ? 'left-6' : 'left-1'"></span>
+              </span>
+            </label>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-2 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold text-white bg-accent shadow-lg shadow-accent/30 transition hover:brightness-110 hover:-translate-y-px active:scale-[.98]">
+              <i data-lucide="check" class="w-[18px] h-[18px]"></i>
+              <span x-text="recForm.id ? 'Guardar cambios' : 'Crear recurrente'"></span>
+            </button>
+          </form>
+        </template>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: META ============ -->
+    <div x-show="goalModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="goalModalOpen = false"></div>
+      <div x-show="goalModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-accent"></i> <span x-text="goalForm.id ? 'Editar meta' : 'Nueva meta'"></span></h3>
+          <button @click="goalModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="form-label">Nombre</label>
+            <input type="text" x-model="goalForm.name" class="field" placeholder="Ej. Fondo de emergencia">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Meta total</label>
+              <input type="number" min="0" step="0.01" x-model="goalForm.targetAmount" class="field" placeholder="0">
+            </div>
+            <div>
+              <label class="form-label">Ya ahorrado</label>
+              <input type="number" min="0" step="0.01" x-model="goalForm.savedAmount" class="field" placeholder="0">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Fecha límite</label>
+              <input type="date" x-model="goalForm.targetDate" class="field">
+            </div>
+            <div>
+              <label class="form-label">Color</label>
+              <input type="color" x-model="goalForm.color" class="w-full h-11 rounded-2xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent">
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-2">
+            <button @click="goalForm.icon = 'target'" class="chip justify-center" :class="goalForm.icon === 'target' ? 'chip-active' : ''"><i data-lucide="target" class="w-4 h-4"></i></button>
+            <button @click="goalForm.icon = 'plane'" class="chip justify-center" :class="goalForm.icon === 'plane' ? 'chip-active' : ''"><i data-lucide="plane" class="w-4 h-4"></i></button>
+            <button @click="goalForm.icon = 'umbrella'" class="chip justify-center" :class="goalForm.icon === 'umbrella' ? 'chip-active' : ''"><i data-lucide="umbrella" class="w-4 h-4"></i></button>
+            <button @click="goalForm.icon = 'piggy-bank'" class="chip justify-center" :class="goalForm.icon === 'piggy-bank' ? 'chip-active' : ''"><i data-lucide="piggy-bank" class="w-4 h-4"></i></button>
+          </div>
+          <button @click="submitGoal" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-accent text-white px-4 py-2.5 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+            <span x-text="goalForm.id ? 'Guardar cambios' : 'Crear meta'"></span>
+          </button>
         </div>
       </div>
+    </div>
 
-      <div class="text-xs text-zinc-400 leading-relaxed border-t border-zinc-100 dark:border-zinc-800 pt-4">
-        <p class="mb-1 font-medium text-zinc-500">¿Más personalización?</p>
-        <p>Edita <code class="text-accent font-mono">theme.config.js</code> (nombre, logo/foto, moneda) y <code class="text-accent font-mono">src/categories.js</code> (categorías, iconos y colores).</p>
+    <!-- ============ MODAL: APORTE A META ============ -->
+    <div x-show="goalContribOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="goalContribOpen = false"></div>
+      <div x-show="goalContribOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="coins" class="w-5 h-5 text-accent"></i> Movimiento de la meta</h3>
+          <button @click="goalContribOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="flex gap-2 mb-4">
+          <button @click="goalContribution.withdraw = false" class="flex-1 chip justify-center" :class="!goalContribution.withdraw ? 'chip-active' : ''"><i data-lucide="arrow-down-circle" class="w-4 h-4"></i> Aportar</button>
+          <button @click="goalContribution.withdraw = true" class="flex-1 chip justify-center" :class="goalContribution.withdraw ? 'chip-active' : ''"><i data-lucide="arrow-up-circle" class="w-4 h-4"></i> Retirar</button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="form-label">Cuenta</label>
+            <select x-model="goalContribution.account" class="field">
+              <template x-for="a in activeAccounts" :key="a.id">
+                <option :value="a.id" x-text="a.name"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Monto</label>
+            <input type="number" min="0" step="0.01" x-model="goalContribution.amount" class="field" placeholder="0">
+          </div>
+          <button @click="submitGoalContribution" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-accent text-white px-4 py-2.5 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+            <span x-text="goalContribution.withdraw ? 'Registrar retiro' : 'Registrar aporte'"></span>
+          </button>
+        </div>
       </div>
-    </aside>
+    </div>
+
+    <!-- ============ MODAL: DEUDA ============ -->
+    <div x-show="debtModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="debtModalOpen = false"></div>
+      <div x-show="debtModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="banknote" class="w-5 h-5 text-accent"></i> <span x-text="debtForm.id ? 'Editar deuda' : 'Nueva deuda'"></span></h3>
+          <button @click="debtModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="form-label">Nombre</label>
+            <input type="text" x-model="debtForm.name" class="field" placeholder="Ej. Tarjeta de crédito">
+          </div>
+          <div>
+            <label class="form-label">Acreedor</label>
+            <input type="text" x-model="debtForm.creditor" class="field" placeholder="Opcional">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Monto original</label>
+              <input type="number" min="0" step="0.01" x-model="debtForm.originalAmount" class="field" placeholder="0">
+            </div>
+            <div>
+              <label class="form-label">Saldo actual</label>
+              <input type="number" min="0" step="0.01" x-model="debtForm.balance" class="field" placeholder="Igual al original">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Cuota mensual</label>
+              <input type="number" min="0" step="0.01" x-model="debtForm.quota" class="field" placeholder="0">
+            </div>
+            <div>
+              <label class="form-label">Próximo pago</label>
+              <input type="date" x-model="debtForm.nextDate" class="field">
+            </div>
+          </div>
+          <button @click="submitDebt" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-accent text-white px-4 py-2.5 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+            <span x-text="debtForm.id ? 'Guardar cambios' : 'Registrar deuda'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: PAGO DE DEUDA ============ -->
+    <div x-show="debtPayOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="debtPayOpen = false"></div>
+      <div x-show="debtPayOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5 text-accent"></i> Pagar cuota</h3>
+          <button @click="debtPayOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">El pago se descuenta del saldo de la deuda y se registra como gasto en la cuenta elegida.</p>
+        <div class="space-y-4">
+          <div>
+            <label class="form-label">Cuenta</label>
+            <select x-model="debtPayment.account" class="field">
+              <template x-for="a in activeAccounts" :key="a.id">
+                <option :value="a.id" x-text="a.name"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Monto</label>
+            <input type="number" min="0" step="0.01" x-model="debtPayment.amount" class="field" placeholder="0">
+          </div>
+          <button @click="submitDebtPayment" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-accent text-white px-4 py-2.5 text-sm font-semibold shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+            Registrar pago
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: CONFIRMACIÓN ============ -->
+    <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="confirmOpen = false"></div>
+      <div x-show="confirmOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom text-center">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl grid place-items-center"
+          :class="confirmTone === 'danger' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : confirmTone === 'ok' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400'">
+          <i :data-lucide="confirmTone === 'danger' ? 'triangle-alert' : confirmTone === 'ok' ? 'circle-check' : 'circle-alert'" class="w-7 h-7"></i>
+        </div>
+        <p class="font-semibold mb-1" x-text="confirmTone === 'danger' ? '¿Estás seguro?' : 'Confirmación'"></p>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed" x-text="confirmMessage"></p>
+        <div class="flex gap-3 mt-6">
+          <button @click="confirmOpen = false" class="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button @click="runConfirm" class="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 active:scale-[.98]"
+            :class="confirmTone === 'danger' ? 'bg-rose-500 shadow-rose-500/30' : 'bg-accent shadow-accent/30'">
+            <span x-text="confirmTone === 'danger' ? 'Sí, continuar' : 'Aceptar'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: REASIGNAR CATEGORÍA ============ -->
+    <div x-show="reassignOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="reassignOpen = false"></div>
+      <div x-show="reassignOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="arrow-right-left" class="w-4 h-4 text-accent"></i> Reasignar movimientos</h3>
+          <button @click="reassignOpen = false" class="btn-icon w-8 h-8" aria-label="Cerrar"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+          Esta categoría tiene <b x-text="categoryUsage(reassignCatId)"></b> movimiento(s) asociado(s). Elige a qué categoría moverlos antes de eliminarla:
+        </p>
+        <select x-model="reassignTarget" class="field mb-5">
+          <template x-for="c in categories" :key="c.id">
+            <template x-if="c.id !== reassignCatId">
+              <option :value="c.id" x-text="c.label"></option>
+            </template>
+          </template>
+        </select>
+        <div class="flex gap-3">
+          <button @click="reassignOpen = false" class="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button @click="confirmReassign" class="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white bg-accent shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+            Reasignar y eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: BÚSQUEDA GLOBAL ============ -->
+    <div x-show="globalSearchOpen" x-cloak class="fixed inset-0 z-[65]">
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="closeGlobalSearch"></div>
+      <div x-show="globalSearchOpen" x-cloak
+        class="relative mx-auto mt-[12vh] w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl overflow-hidden anim-zoom">
+        <div class="flex items-center gap-3 px-5 h-14 border-b border-slate-100 dark:border-slate-800">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+          <input id="global-search-input" type="text" x-model.debounce.200ms="globalQuery" placeholder="Buscar movimientos, cuentas, categorías…"
+            class="flex-1 bg-transparent outline-none text-sm min-w-0">
+          <button @click="closeGlobalSearch" class="btn-icon w-8 h-8" aria-label="Cerrar"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <div class="max-h-[50vh] overflow-y-auto p-3 space-y-4">
+          <template x-if="!globalQuery.trim()">
+            <p class="text-sm text-slate-400 text-center py-8">Escribe para buscar en toda tu información.</p>
+          </template>
+          <template x-if="globalQuery.trim() && globalSearchResults.length === 0">
+            <p class="text-sm text-slate-400 text-center py-8">Sin resultados para "<span x-text="globalQuery"></span>".</p>
+          </template>
+
+          <template x-for="group in globalSearchResults" :key="group.key">
+            <div>
+              <p class="px-2 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <i :data-lucide="group.icon" class="w-3.5 h-3.5"></i> <span x-text="group.label"></span>
+              </p>
+              <div class="space-y-1">
+                <template x-for="item in group.items" :key="item.rec?.id ?? item.id">
+                  <button @click="globalPick(item, group.key)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <template x-if="group.key === 'movimientos'">
+                      <span class="w-8 h-8 rounded-xl grid place-items-center shrink-0"
+                        :class="item.kind === 'expense' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : item.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400'">
+                        <i :data-lucide="item.kind === 'expense' ? 'credit-card' : item.kind === 'income' ? 'trending-up' : 'arrow-right-left'" class="w-4 h-4"></i>
+                      </span>
+                    </template>
+                    <template x-if="group.key === 'cuentas'">
+                      <span class="w-8 h-8 rounded-xl grid place-items-center shrink-0" :style="`background:${item.color}22; color:${item.color}`">
+                        <i :data-lucide="item.icon" class="w-4 h-4"></i>
+                      </span>
+                    </template>
+                    <template x-if="group.key === 'categorias'">
+                      <span class="w-8 h-8 rounded-xl grid place-items-center shrink-0" :style="`background:${item.color}22; color:${item.color}`">
+                        <i :data-lucide="item.icon" class="w-4 h-4"></i>
+                      </span>
+                    </template>
+                    <div class="min-w-0 flex-1">
+                      <template x-if="group.key === 'movimientos'">
+                        <div class="flex items-center justify-between gap-3">
+                          <p class="text-sm font-medium truncate" x-text="item.rec.description || item.cat.label || item.acct?.name"></p>
+                          <p class="text-sm font-semibold tabular-nums shrink-0" :class="item.kind === 'expense' ? 'text-rose-500' : item.kind === 'income' ? 'text-emerald-500' : 'text-sky-500'"
+                            x-text="(item.kind === 'income' ? '+' : item.kind === 'expense' ? '-' : '↔ ') + fmt(item.rec.amount)"></p>
+                        </div>
+                      </template>
+                      <template x-if="group.key === 'cuentas'">
+                        <div class="flex items-center justify-between gap-3">
+                          <p class="text-sm font-medium truncate" x-text="item.name"></p>
+                          <p class="text-sm font-semibold tabular-nums shrink-0" x-text="fmt(item.balance)"></p>
+                        </div>
+                      </template>
+                      <template x-if="group.key === 'categorias'">
+                        <p class="text-sm font-medium truncate" x-text="item.label"></p>
+                      </template>
+                      <template x-if="group.key === 'movimientos'">
+                        <p class="text-xs text-slate-400" x-text="formatDate(item.rec.date) + ' · ' + item.acct?.name"></p>
+                      </template>
+                    </div>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="px-5 py-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[11px] text-slate-400">
+          <span><kbd class="kbd">Enter</kbd> abrir</span>
+          <span><kbd class="kbd">Esc</kbd> cerrar</span>
+          <span class="ml-auto">Atajos: <kbd class="kbd">N</kbd> gasto · <kbd class="kbd">I</kbd> ingreso · <kbd class="kbd">T</kbd> transferencia · <kbd class="kbd">/</kbd> buscar · <kbd class="kbd">Ctrl+Z</kbd> deshacer</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MODAL: ANÁLISIS DE DATOS ============ -->
+    <div x-show="analysisOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="analysisOpen = false"></div>
+      <div x-show="analysisOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Analizar datos</h3>
+          <button @click="analysisOpen = false" class="btn-icon w-8 h-8" aria-label="Cerrar"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <template x-if="analysis">
+          <div>
+            <div class="rounded-2xl px-4 py-3 mb-4"
+              :class="analysis.ok ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'">
+              <p class="flex items-center gap-2 text-sm font-semibold">
+                <i :data-lucide="analysis.ok ? 'circle-check' : 'triangle-alert'" class="w-4 h-4"></i>
+                <span x-text="analysis.summary"></span>
+              </p>
+              <p x-show="!analysis.ok" class="text-xs font-normal mt-1 text-slate-500 dark:text-slate-400"
+                x-text="analysis.counts.error + ' error(es) · ' + analysis.counts.warning + ' advertencia(s)'"></p>
+            </div>
+
+            <p x-show="analysisFixed" class="text-xs text-emerald-600 dark:text-emerald-400 mb-3">
+              ✓ <span x-text="analysisFixed"></span> correcciones seguras aplicadas.
+            </p>
+
+            <template x-if="!analysis.ok">
+              <div class="space-y-2 max-h-56 overflow-y-auto pr-1 mb-4">
+                <template x-for="(it, i) in analysis.issues" :key="i">
+                  <div class="flex items-start gap-2 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2">
+                    <i :data-lucide="it.level === 'error' ? 'circle-x' : 'triangle-alert'" class="w-4 h-4 mt-0.5 shrink-0"
+                      :class="it.level === 'error' ? 'text-rose-500' : 'text-amber-500'"></i>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      <span class="font-semibold uppercase tracking-wide text-[10px] text-slate-400" x-text="it.area"></span>
+                      — <span x-text="it.message"></span>
+                    </p>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <div class="flex gap-3">
+              <button @click="analysisOpen = false" class="btn-ghost flex-1 justify-center">Cerrar</button>
+              <button x-show="!analysis.ok" @click="applySafeFixes"
+                class="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white bg-accent shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-[.98]">
+                <i data-lucide="wand-2" class="w-4 h-4"></i> Aplicar correcciones seguras
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
 
     <!-- Toast -->
-    <div x-show="toast" x-cloak
+    <div id="toast" x-show="toast" x-cloak
       x-transition:enter="transition duration-300" x-transition:enter-start="translate-y-32 opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
       x-transition:leave="transition duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-      class="fixed bottom-7 left-1/2 -translate-x-1/2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-5 py-3 rounded-full text-[13px] font-medium shadow-xl z-[60]"
-      x-text="toast"></div>
+      class="fixed bottom-7 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-full text-[13px] font-medium shadow-xl z-[80] max-w-[90vw] flex items-center gap-4">
+      <span x-text="toast"></span>
+      <button x-show="toastActionLabel" @click="runToastAction"
+        class="shrink-0 font-bold text-accent underline decoration-2 underline-offset-2 hover:opacity-80"
+        x-text="toastActionLabel"></button>
+    </div>
 
   </div>
 </body>
