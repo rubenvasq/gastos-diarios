@@ -80,6 +80,26 @@ export function getBackup(id) {
   return listBackups().find((b) => b.id === id) ?? null;
 }
 
+// ISO del respaldo más reciente (cualquier tipo), o null si no hay ninguno.
+export function lastBackupAt() {
+  const items = listBackups();
+  if (!items.length) return null;
+  return items.reduce((max, b) => (b.createdAt > max ? b.createdAt : max), items[0].createdAt);
+}
+
+// Respaldo automático periódico: crea uno solo si han pasado más de `hours`
+// horas desde el último respaldo. Idempotente por sesión/día; nunca reemplaza
+// los datos actuales (solo añade un punto de restauración). Devuelve el item
+// creado, o null si no tocaba respaldar (o si falló la escritura).
+export function maybeAutoBackup(state, hours = 24) {
+  const last = lastBackupAt();
+  if (last) {
+    const elapsed = Date.now() - new Date(last).getTime();
+    if (Number.isFinite(elapsed) && elapsed < hours * 3600 * 1000) return null;
+  }
+  return saveBackup(state, { auto: true, label: 'Respaldo automático' });
+}
+
 export function removeBackup(id) {
   persistBackups(listBackups().filter((b) => b.id !== id));
 }

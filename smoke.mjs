@@ -144,6 +144,18 @@ assert(restored.version === 3, 'restoreBackup returns data');
 backup.removeBackup(saved.id);
 assert(backup.listBackups().length === 0, 'removeBackup');
 
+// ---- auto-backup periódico ----
+assert(backup.lastBackupAt() === null, 'lastBackupAt null sin respaldos');
+const auto1 = backup.maybeAutoBackup(storage.defaultState(), 24);
+assert(auto1 && auto1.auto === true, 'maybeAutoBackup crea el primer respaldo');
+assert(typeof backup.lastBackupAt() === 'string', 'lastBackupAt devuelve fecha tras respaldar');
+const auto2 = backup.maybeAutoBackup(storage.defaultState(), 24);
+assert(auto2 === null, 'maybeAutoBackup no duplica dentro del intervalo');
+const auto3 = backup.maybeAutoBackup(storage.defaultState(), 0);
+assert(auto3 && auto3.auto === true, 'maybeAutoBackup respalda si el intervalo ya pasó');
+backup.removeBackup(auto1.id); backup.removeBackup(auto3.id);
+assert(backup.listBackups().length === 0, 'limpieza auto-backup');
+
 // ---- insights ----
 const ins = stats.insights(m, 2026, 8, { fmt: (n) => String(n), catLabel: (id) => id });
 assert(Array.isArray(ins), 'insights returns array');

@@ -1630,6 +1630,10 @@
           <div class="card space-y-4">
             <h3 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-accent"></i> Datos y respaldo</h3>
             <p class="text-sm text-slate-400">Todos tus datos se guardan localmente en tu navegador. Crea respaldos periódicamente y revisa el historial de restauración.</p>
+            <p class="text-xs flex items-center gap-1.5" :class="lastBackupLabel ? 'text-slate-500 dark:text-slate-400' : 'text-amber-500'">
+              <i :data-lucide="lastBackupLabel ? 'check-circle-2' : 'alert-circle'" class="w-3.5 h-3.5"></i>
+              <span x-text="lastBackupLabel ? ('Último respaldo: ' + lastBackupLabel) : 'Aún no hay respaldos. Crea uno ahora.'"></span>
+            </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button @click="saveManualBackup" class="btn-ghost justify-center"><i data-lucide="hard-drive-download" class="w-4 h-4 text-accent"></i> Guardar respaldo ahora</button>

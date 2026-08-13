@@ -6,7 +6,7 @@
  *  - Si la red falla, cae a la copia en caché (offline).
  * La versión de la caché se sube al cambiar la app para invalidar viejas copias.
  */
-const VERSION = 'v3.1.0';
+const VERSION = 'v3.2.0';
 const CACHE = `gastosdiarios-${VERSION}`;
 
 const APP_SHELL = [

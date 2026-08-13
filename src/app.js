@@ -239,6 +239,10 @@ document.addEventListener('alpine:init', () => {
       window.addEventListener('pointerdown', () => this._trackActivity(), { passive: true });
       window.addEventListener('keydown', () => this._trackActivity(), { passive: true });
 
+      // Respaldo automático: crea un punto de restauración si ha pasado más de
+      // un día desde el último. No reemplaza datos, solo añade al historial.
+      try { backup.maybeAutoBackup(this.state, 24); } catch { /* cuota/errores no bloquean el arranque */ }
+
       // Snapshot base para el sistema de deshacer
       this._lastSaved = JSON.parse(JSON.stringify(this.state));
 
@@ -1795,6 +1799,12 @@ document.addEventListener('alpine:init', () => {
     // ============================================================
     get backups() {
       return backup.listBackups().map(backup.backupSummary);
+    },
+
+    // Fecha del último respaldo (para "Último respaldo: ..."), o null si no hay.
+    get lastBackupLabel() {
+      const at = backup.lastBackupAt();
+      return at ? this.formatDateTime(at) : null;
     },
 
     saveManualBackup() {
