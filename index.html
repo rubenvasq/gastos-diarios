@@ -1796,7 +1796,7 @@
     <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="modalOpen = false"></div>
       <div x-show="modalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-bold tracking-tight" x-text="editingId ? 'Editar movimiento' : 'Nuevo movimiento'"></h2>
           <button @click="modalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -1921,7 +1921,7 @@
     <div x-show="accountModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="accountModalOpen = false"></div>
       <div x-show="accountModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-bold tracking-tight" x-text="accountForm?.id ? 'Editar cuenta' : 'Nueva cuenta'"></h2>
           <button @click="accountModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2007,7 +2007,7 @@
     <div x-show="catModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="catModalOpen = false"></div>
       <div x-show="catModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-bold tracking-tight" x-text="catForm?.id ? 'Editar categoría' : 'Nueva categoría'"></h2>
           <button @click="catModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2065,7 +2065,7 @@
     <div x-show="recModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="recModalOpen = false"></div>
       <div x-show="recModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-bold tracking-tight" x-text="recForm?.id ? 'Editar recurrente' : 'Nuevo recurrente'"></h2>
           <button @click="recModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2139,7 +2139,7 @@
     <div x-show="goalModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="goalModalOpen = false"></div>
       <div x-show="goalModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-5">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-accent"></i> <span x-text="goalForm.id ? 'Editar meta' : 'Nueva meta'"></span></h3>
           <button @click="goalModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2186,7 +2186,7 @@
     <div x-show="goalContribOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="goalContribOpen = false"></div>
       <div x-show="goalContribOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="coins" class="w-5 h-5 text-accent"></i> Movimiento de la meta</h3>
           <button @click="goalContribOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2219,7 +2219,7 @@
     <div x-show="debtModalOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="debtModalOpen = false"></div>
       <div x-show="debtModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-5">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="banknote" class="w-5 h-5 text-accent"></i> <span x-text="debtForm.id ? 'Editar deuda' : 'Nueva deuda'"></span></h3>
           <button @click="debtModalOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2264,7 +2264,7 @@
     <div x-show="debtPayOpen" x-cloak class="fixed inset-0 z-[60] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="debtPayOpen = false"></div>
       <div x-show="debtPayOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5 text-accent"></i> Pagar cuota</h3>
           <button @click="debtPayOpen = false" class="btn-icon w-9 h-9" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2294,7 +2294,7 @@
     <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="confirmOpen = false"></div>
       <div x-show="confirmOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom text-center">
+        role="dialog" aria-modal="true" class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom text-center">
         <div class="w-14 h-14 mx-auto mb-4 rounded-2xl grid place-items-center"
           :class="confirmTone === 'danger' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : confirmTone === 'ok' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400'">
           <i :data-lucide="confirmTone === 'danger' ? 'triangle-alert' : confirmTone === 'ok' ? 'circle-check' : 'circle-alert'" class="w-7 h-7"></i>
@@ -2315,7 +2315,7 @@
     <div x-show="reassignOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="reassignOpen = false"></div>
       <div x-show="reassignOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="arrow-right-left" class="w-4 h-4 text-accent"></i> Reasignar movimientos</h3>
           <button @click="reassignOpen = false" class="btn-icon w-8 h-8" aria-label="Cerrar"><i data-lucide="x" class="w-4 h-4"></i></button>
@@ -2424,7 +2424,7 @@
     <div x-show="analysisOpen" x-cloak class="fixed inset-0 z-[70] grid place-items-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="analysisOpen = false"></div>
       <div x-show="analysisOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-        class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
+        role="dialog" aria-modal="true" class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-2xl p-6 anim-zoom">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Analizar datos</h3>
           <button @click="analysisOpen = false" class="btn-icon w-8 h-8" aria-label="Cerrar"><i data-lucide="x" class="w-4 h-4"></i></button>
