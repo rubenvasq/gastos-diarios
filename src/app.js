@@ -223,6 +223,11 @@ document.addEventListener('alpine:init', () => {
       this._setupScrollSpy();
       this._setupShortcuts();
 
+      // Configuración como página con URL propia (#config): sincroniza con el
+      // hash y restaura la pantalla correcta si se recarga estando en ella.
+      window.addEventListener('hashchange', () => this._applyHash());
+      this._applyHash();
+
       // PWA / offline: registra el service worker (no rompe nada en http://localhost
       // ni si el navegador no lo soporta).
       if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -833,6 +838,9 @@ document.addEventListener('alpine:init', () => {
     // ============================================================
     goTo(id) {
       if (this.showConfig) this.showConfig = false;
+      if (location.hash === '#config') {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
       this.view = id;
       this.sidebarOpen = false;
       this.fabOpen = false;
@@ -849,20 +857,43 @@ document.addEventListener('alpine:init', () => {
       });
     },
 
-    // Configuración: pantalla aparte accesible desde el perfil
+    // Configuración: página aparte con su propia URL (#config), accesible
+    // desde el desplegable del perfil. Al usar el hash se comporta como una
+    // página real: cambia la URL, funciona el botón "atrás" y persiste al recargar.
     openConfig() {
-      this.showConfig = true;
       this.profileOpen = false;
       this.sidebarOpen = false;
       this.fabOpen = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      this.$nextTick(refreshIcons);
+      if (location.hash !== '#config') location.hash = 'config'; // dispara _applyHash
+      else this._applyHash();
     },
 
     closeConfig() {
+      // Quita el hash sin dejar el '#' colgando; sincroniza el estado a mano
+      // porque replaceState no dispara el evento hashchange.
+      if (location.hash === '#config') {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
       this.showConfig = false;
       window.scrollTo({ top: 0 });
       this.$nextTick(() => { refreshIcons(); this.renderCharts(); });
+    },
+
+    // Sincroniza showConfig con la URL. Se llama al cargar y en cada hashchange.
+    _applyHash() {
+      const wantConfig = location.hash === '#config';
+      if (wantConfig === this.showConfig) return;
+      this.showConfig = wantConfig;
+      if (wantConfig) {
+        this.profileOpen = false;
+        this.sidebarOpen = false;
+        this.fabOpen = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.$nextTick(refreshIcons);
+      } else {
+        window.scrollTo({ top: 0 });
+        this.$nextTick(() => { refreshIcons(); this.renderCharts(); });
+      }
     },
 
     changeMonth(delta) {
