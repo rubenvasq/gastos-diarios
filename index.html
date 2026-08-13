@@ -1261,7 +1261,7 @@
             <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
               <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="wallet" class="w-3.5 h-3.5"></i> Activos</p>
               <p class="text-2xl font-extrabold tabular-nums text-emerald-500" x-text="fmt(patrimonio.assets)"></p>
-              <p class="text-xs text-slate-400">Suma de tus cuentas.</p>
+              <p class="text-xs text-slate-400" x-text="patrimonio.goals > 0 ? 'Cuentas (' + fmt(patrimonio.accounts) + ') + metas (' + fmt(patrimonio.goals) + ').' : 'Suma de tus cuentas.'"></p>
             </div>
             <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
               <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="banknote" class="w-3.5 h-3.5"></i> Pasivos</p>

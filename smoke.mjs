@@ -208,4 +208,18 @@ assert(nwDebt.assets === 1000 && nwDebt.liabilities === 200 && nwDebt.netWorth =
 const series = finance.netWorthSeries(nwState, 2026, 100);
 assert(series.length === 12 && series[0].value === 100, 'netWorthSeries base + 12 meses');
 
+// ---- metas como activo: aportar no debe cambiar el patrimonio neto ----
+// Al aportar 300 a una meta, la cuenta baja a 700 y la meta sube a 300;
+// el patrimonio neto (activos - pasivos) debe quedar igual.
+const goalState = {
+  accounts: [{ id: 'a', name: 'A', icon: 'wallet', color: '#10b981', balance: 700 }],
+  expenses: [], income: [], transfers: [], debts: [],
+  goals: [{ id: 'g', name: 'Viaje', targetAmount: 1000, savedAmount: 300, createdAt: 'x' }],
+};
+const nwGoal = finance.calculateNetWorth(goalState);
+assert(finance.goalSavings(goalState) === 300, 'goalSavings suma ahorro de metas');
+assert(nwGoal.accounts === 700 && nwGoal.goals === 300, 'netWorth separa cuentas y metas');
+assert(nwGoal.assets === 1000 && nwGoal.netWorth === 1000, 'aportar a meta no cambia el patrimonio');
+assert(finance.goalSavings({ goals: [{ savedAmount: -50 }, { savedAmount: 'x' }] }) === 0, 'goalSavings ignora montos inválidos');
+
 console.log('\nALL SMOKE TESTS PASSED');

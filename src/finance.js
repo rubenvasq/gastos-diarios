@@ -92,15 +92,28 @@ export function calculateCatBudgetUsage(state, year, month) {
   return out;
 }
 
-// Patrimonio neto: activos (balances de cuentas) menos pasivos (deudas pendientes).
+// Dinero apartado en metas de ahorro. Al aportar a una meta se resta el saldo
+// de la cuenta real, así que ese dinero debe volver a contarse como activo para
+// que el patrimonio neto no baje solo por reorganizar tus ahorros.
+export function goalSavings(state) {
+  return round2((state?.goals ?? []).reduce((acc, g) => {
+    const n = Number(g?.savedAmount);
+    return acc + (Number.isFinite(n) && n > 0 ? n : 0);
+  }, 0));
+}
+
+// Patrimonio neto: activos (saldos de cuentas + ahorro en metas) menos pasivos
+// (deudas pendientes).
 export function calculateNetWorth(state) {
-  const assets = calculateBalance(state);
+  const accounts = calculateBalance(state);
+  const goals = goalSavings(state);
+  const assets = round2(accounts + goals);
   const liabilities = round2((state?.debts ?? []).reduce((acc, d) => {
     if (d?.status === 'pagada') return acc;
     const n = Number(d?.balance ?? d?.originalAmount);
     return acc + (Number.isFinite(n) ? n : 0);
   }, 0));
-  return { assets, liabilities, netWorth: round2(assets - liabilities) };
+  return { accounts, goals, assets, liabilities, netWorth: round2(assets - liabilities) };
 }
 
 // Totales de los 12 meses de un año (ingresos, gastos, ahorro).
