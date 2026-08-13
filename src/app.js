@@ -1018,29 +1018,43 @@ document.addEventListener('alpine:init', () => {
         note: (this.form.note || '').trim(),
       };
 
-      // Edición: primero revierte el efecto del registro original
-      if (this.editingId) this._revertRecord(this.editingId);
+      // Edición: revierte el saldo del original y lo saca de su colección.
+      // Se conservan su id y createdAt para no romper el vínculo con los
+      // comprobantes ni perder el orden histórico del registro.
+      const editing = this.editingId;
+      let keepId = null;
+      let keepCreatedAt = null;
+      if (editing) {
+        const prev = this._extractRecord(editing);
+        if (prev) { keepId = prev.rec.id; keepCreatedAt = prev.rec.createdAt; }
+      }
+      const preserve = (rec) => {
+        if (keepId) rec.id = keepId;
+        if (keepCreatedAt) rec.createdAt = keepCreatedAt;
+        return rec;
+      };
 
       if (this.entryType === 'income') {
-        const rec = store.createIncome({ ...common, account: this.form.account });
+        const rec = preserve(store.createIncome({ ...common, account: this.form.account }));
         this.state.income.push(rec);
         this._applyBalance('income', amountR, this.form.account, null, 1);
         this._attachPendingReceipts(rec.id);
-        this._logActivity('ingreso', this.editingId ? 'Ingreso actualizado' : `Ingreso de ${this.fmt(amountR)} registrado`);
-        this.notify(this.editingId ? 'Ingreso actualizado.' : `Ingreso de ${this.fmt(amountR)} registrado.`);
+        this._logActivity('ingreso', editing ? 'Ingreso actualizado' : `Ingreso de ${this.fmt(amountR)} registrado`);
+        this.notify(editing ? 'Ingreso actualizado.' : `Ingreso de ${this.fmt(amountR)} registrado.`);
       } else if (this.entryType === 'expense') {
-        const rec = store.createExpense({ ...common, category: this.form.category, account: this.form.account });
+        const rec = preserve(store.createExpense({ ...common, category: this.form.category, account: this.form.account }));
         this.state.expenses.push(rec);
         this._applyBalance('expense', amountR, this.form.account, null, 1);
         this._attachPendingReceipts(rec.id);
-        this._logActivity('gasto', this.editingId ? 'Gasto actualizado' : `Gasto de ${this.fmt(amountR)} registrado`);
-        this.notify(this.editingId ? 'Gasto actualizado.' : `Gasto de ${this.fmt(amountR)} registrado.`);
+        this._logActivity('gasto', editing ? 'Gasto actualizado' : `Gasto de ${this.fmt(amountR)} registrado`);
+        this.notify(editing ? 'Gasto actualizado.' : `Gasto de ${this.fmt(amountR)} registrado.`);
       } else {
-        const rec = store.createTransfer({ ...common, from: this.form.account, to: this.form.toAccount });
+        const rec = preserve(store.createTransfer({ ...common, from: this.form.account, to: this.form.toAccount }));
         this.state.transfers.push(rec);
         this._applyBalance('transfer', amountR, this.form.account, this.form.toAccount, 1);
-        this._logActivity('transferencia', this.editingId ? 'Transferencia actualizada' : `Transferencia de ${this.fmt(amountR)}`);
-        this.notify('Transferencia registrada.');
+        this._attachPendingReceipts(rec.id);
+        this._logActivity('transferencia', editing ? 'Transferencia actualizada' : `Transferencia de ${this.fmt(amountR)}`);
+        this.notify(editing ? 'Transferencia actualizada.' : 'Transferencia registrada.');
       }
 
       this.editingId = null;
@@ -1049,14 +1063,30 @@ document.addEventListener('alpine:init', () => {
       this.$nextTick(() => { refreshIcons(); this.renderCharts(); });
     },
 
-    // Revierte el efecto en los saldos del registro que se está editando.
-    _revertRecord(id) {
+    // Edición: revierte el saldo del registro original Y lo saca de su colección
+    // (el tipo puede cambiar de gasto↔ingreso↔transferencia al editar). Devuelve
+    // { rec, kind } para poder reutilizar su id/createdAt y conservar los
+    // comprobantes vinculados. null si el id ya no existe.
+    _extractRecord(id) {
       const e = this.state.expenses.find((x) => x.id === id);
-      if (e) { this._applyBalance('expense', e.amount, e.account, null, -1); return; }
+      if (e) {
+        this._applyBalance('expense', e.amount, e.account, null, -1);
+        this.state.expenses = this.state.expenses.filter((x) => x.id !== id);
+        return { rec: e, kind: 'expense' };
+      }
       const i = this.state.income.find((x) => x.id === id);
-      if (i) { this._applyBalance('income', i.amount, i.account, null, -1); return; }
+      if (i) {
+        this._applyBalance('income', i.amount, i.account, null, -1);
+        this.state.income = this.state.income.filter((x) => x.id !== id);
+        return { rec: i, kind: 'income' };
+      }
       const t = this.state.transfers.find((x) => x.id === id);
-      if (t) { this._applyBalance('transfer', t.amount, t.from, t.to, -1); }
+      if (t) {
+        this._applyBalance('transfer', t.amount, t.from, t.to, -1);
+        this.state.transfers = this.state.transfers.filter((x) => x.id !== id);
+        return { rec: t, kind: 'transfer' };
+      }
+      return null;
     },
 
     removeTx(t) {
