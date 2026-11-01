@@ -1,0 +1,87 @@
+<template x-if="view === 'cuentas'">
+<section id="view-cuentas" x-cloak class="scroll-mt-24 space-y-8">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Cuentas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Gestiona tus cuentas, saldos y transferencias.</p>
+            </div>
+            <div class="flex gap-2">
+              <button @click="openTxModal('transfer')" class="btn-ghost">
+                <i data-lucide="arrow-right-left" class="w-4 h-4 text-accent"></i> Transferir
+              </button>
+              <button @click="openAccountModal()" class="btn-primary hover:-translate-y-px">
+                <i data-lucide="plus" class="w-4 h-4"></i> Nueva cuenta
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Balance total</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="fmt(totalBalance)"></p>
+            </div>
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Cuentas activas</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="activeAccounts.length"></p>
+            </div>
+            <div class="col-span-12 sm:col-span-4 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Movimientos este mes</p>
+              <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="allTx.length"></p>
+            </div>
+          </div>
+
+          <template x-if="accounts.length === 0">
+            <div class="card text-center py-16">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                <i data-lucide="wallet" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+              </div>
+              <p class="font-semibold">No tienes cuentas todavía</p>
+              <p class="text-sm text-slate-400 mt-1 mb-5">Crea tu primera cuenta para empezar a registrar movimientos.</p>
+              <button @click="openAccountModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Crear cuenta</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="a in accounts" :key="a.id">
+              <div class="col-span-12 sm:col-span-6 lg:col-span-4 relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-slate-800 p-5 transition hover:-translate-y-0.5 hover:shadow-xl group"
+                :style="`background:linear-gradient(135deg, ${a.color}1f 0%, ${a.color}0d 55%, transparent 100%)`">
+                <span class="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-15 transition group-hover:scale-110" :style="`background:${a.color}`"></span>
+                <div class="relative">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-11 h-11 rounded-2xl grid place-items-center shadow-sm" :style="`background:${a.color}1f; color:${a.color}`">
+                        <i :data-lucide="a.icon" class="w-5 h-5"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="font-semibold truncate" x-text="a.name"></p>
+                        <p class="text-xs text-slate-400" x-text="accountTypeLabel(a.type)"></p>
+                      </div>
+                    </div>
+                    <span class="chip text-[10px] px-2 py-0.5" :class="a.status === 'activa' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'">
+                      <span class="w-1.5 h-1.5 rounded-full" :class="a.status === 'activa' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                      <span x-text="a.status === 'activa' ? 'Activa' : 'Inactiva'"></span>
+                    </span>
+                  </div>
+
+                  <p class="text-2xl font-bold tracking-tight tabular-nums truncate" x-text="fmt(a.balance)"></p>
+
+                  <div class="flex items-center justify-between mt-5">
+                    <button @click="viewAccountMovements(a.id)" class="text-xs font-semibold text-accent hover:underline">
+                      Ver movimientos
+                    </button>
+                    <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                      <button @click="openAccountModal(a)" class="btn-icon w-8 h-8" title="Editar cuenta">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                      </button>
+                      <button @click="deleteAccount(a)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar cuenta">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+</template>

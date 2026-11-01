@@ -1,0 +1,37 @@
+<template x-if="view === 'patrimonio'">
+<section id="view-patrimonio" x-cloak class="scroll-mt-24 space-y-6">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight">Patrimonio</h2>
+            <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="landmark" class="w-3.5 h-3.5"></i> Patrimonio neto</p>
+              <p class="text-2xl font-extrabold tabular-nums" :class="patrimonio.netWorth >= 0 ? 'text-accent' : 'text-rose-500'" x-text="fmt(patrimonio.netWorth)"></p>
+              <p class="text-xs text-slate-400">Activos menos pasivos.</p>
+            </div>
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="wallet" class="w-3.5 h-3.5"></i> Activos</p>
+              <p class="text-2xl font-extrabold tabular-nums text-emerald-500" x-text="fmt(patrimonio.assets)"></p>
+              <p class="text-xs text-slate-400" x-text="patrimonio.goals > 0 ? 'Cuentas (' + fmt(patrimonio.accounts) + ') + metas (' + fmt(patrimonio.goals) + ').' : 'Suma de tus cuentas.'"></p>
+            </div>
+            <div class="col-span-12 md:col-span-4 card p-5 space-y-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><i data-lucide="banknote" class="w-3.5 h-3.5"></i> Pasivos</p>
+              <p class="text-2xl font-extrabold tabular-nums text-rose-500" x-text="fmt(patrimonio.liabilities)"></p>
+              <p class="text-xs text-slate-400">Deudas pendientes.</p>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="font-bold">Evolución estimada del patrimonio</h3>
+              <span class="text-xs text-slate-400">Año <span x-text="viewYear"></span></span>
+            </div>
+            <div class="h-64">
+              <canvas id="patrimonioChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Los meses futuros son una proyección estimada según tus ingresos y gastos actuales del año.</p>
+          </div>
+        </section>
+</template>

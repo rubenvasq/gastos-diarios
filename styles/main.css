@@ -1,10 +1,14 @@
-/* Complementos que Tailwind (CDN) no cubre:
-   variables de tema, scrollbars, ocultar hasta que Alpine carga y animaciones suaves. */
+/* Variables de tema, scrollbars, animaciones e impresión. */
 
 :root {
-  --accent: 16 185 129; /* esmeralda; lo sobreescribe theme.config.js / el panel */
+  --accent: 16 185 129; /* lo sobreescribe theme.config.js / el panel */
   --rose: #e11d48;
   --amber: #f59e0b;
+
+  /* Gradiente de marca derivado del acento (color-mix): funciona con cualquier acento. */
+  --accent-grad-from: rgb(var(--accent));
+  --accent-grad-to: color-mix(in oklab, rgb(var(--accent)) 55%, #7c3aed);
+  --brand-gradient: linear-gradient(135deg, var(--accent-grad-from), var(--accent-grad-to));
 }
 
 [x-cloak] { display: none !important; }
@@ -78,9 +82,24 @@ input[type="color"] {
   }
 }
 
-/* ============================================================
-   Impresión: solo el reporte, sin chrome de la app
-   ============================================================ */
+/* Safe-area (notch / home indicator) para la PWA en móvil. En escritorio vale 0. */
+.app-topbar { padding-top: env(safe-area-inset-top); }
+.app-sidebar {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+}
+.app-main {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+#fab {
+  margin-bottom: env(safe-area-inset-bottom);
+  margin-right: env(safe-area-inset-right);
+}
+#toast {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+/* Impresión: solo el reporte, sin el chrome de la app. */
 @media print {
   * {
     -webkit-print-color-adjust: exact !important;

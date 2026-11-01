@@ -1,0 +1,385 @@
+<template x-if="view === 'inicio'">
+<section id="view-inicio" x-cloak class="scroll-mt-24 space-y-8">
+          <!-- Resumen proactivo del día: el asistente te saluda con lo importante -->
+          <div x-show="showBriefing" x-cloak x-transition.opacity
+            class="card p-5 anim-rise border-l-4"
+            :class="dailyBriefing.tone === 'danger' ? 'border-l-rose-500' : dailyBriefing.tone === 'warn' ? 'border-l-amber-500' : 'border-l-accent'">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-2xl grid place-items-center shrink-0 text-white shadow-lg shadow-accent/30" style="background-image: var(--brand-gradient)">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-semibold">
+                    <span x-text="dailyBriefing.greet"></span> ·
+                    <span class="text-slate-500 dark:text-slate-400 font-medium" x-text="dailyBriefing.headline"></span>
+                  </p>
+                  <button @click="dismissBriefing()" class="btn-icon w-8 h-8 shrink-0" aria-label="Descartar resumen">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+                <ul class="mt-3 space-y-2">
+                  <template x-for="(it, i) in dailyBriefing.items" :key="i">
+                    <li class="flex items-center gap-2.5 text-sm">
+                      <i :data-lucide="it.icon" class="w-4 h-4 shrink-0"
+                        :class="it.tone === 'danger' ? 'text-rose-500' : it.tone === 'warn' ? 'text-amber-500' : it.tone === 'good' ? 'text-emerald-500' : 'text-accent'"></i>
+                      <span x-text="it.text"></span>
+                    </li>
+                  </template>
+                </ul>
+                <div class="mt-4 flex items-center gap-2">
+                  <button @click="askAgentAboutBriefing()" class="btn-ghost text-accent">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Preguntar al asistente
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pestañas: Resumen / Gastos / Actividad (cada una con x-show). -->
+          <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 text-sm font-medium w-full sm:w-auto sm:inline-flex">
+            <button @click="inicioTab = 'resumen'; $nextTick(() => requestAnimationFrame(() => renderCharts()))"
+              class="flex-1 sm:flex-none px-4 py-2 rounded-xl transition inline-flex items-center justify-center gap-2"
+              :class="inicioTab === 'resumen' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Resumen
+            </button>
+            <button @click="inicioTab = 'gastos'; $nextTick(() => requestAnimationFrame(() => renderCharts()))"
+              class="flex-1 sm:flex-none px-4 py-2 rounded-xl transition inline-flex items-center justify-center gap-2"
+              :class="inicioTab === 'gastos' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+              <i data-lucide="chart-pie" class="w-4 h-4"></i> Gastos
+            </button>
+            <button @click="inicioTab = 'actividad'"
+              class="flex-1 sm:flex-none px-4 py-2 rounded-xl transition inline-flex items-center justify-center gap-2"
+              :class="inicioTab === 'actividad' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+              <i data-lucide="receipt" class="w-4 h-4"></i> Actividad
+            </button>
+          </div>
+
+          <!-- ========================= PESTAÑA: RESUMEN ========================= -->
+          <div x-show="inicioTab === 'resumen'" class="space-y-8">
+
+          <!-- Hero (Balance total) + resumen del mes (ingresos/gastos/ahorro + presupuesto). -->
+          <div class="grid grid-cols-12 gap-5" x-show="widgetOn('kpis')">
+            <!-- Hero: Balance total -->
+            <div class="col-span-12 lg:col-span-5 relative overflow-hidden rounded-3xl p-6 text-white shadow-lg shadow-accent/30 anim-rise flex flex-col"
+              style="background-image: var(--brand-gradient)">
+              <span class="glow-orb -top-12 -right-12 w-48 h-48 bg-white !opacity-10"></span>
+              <div class="relative flex items-center gap-2 text-white/80 text-sm font-medium">
+                <i data-lucide="wallet" class="w-[18px] h-[18px]"></i> Balance total
+              </div>
+              <p class="relative mt-3 text-[34px] leading-none font-bold tracking-tight tabular-nums truncate" x-text="fmt(totalBalance)"></p>
+              <div class="relative mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-white/15 backdrop-blur px-3 py-1 text-sm font-semibold">
+                <i :data-lucide="savings >= 0 ? 'arrow-up-right' : 'arrow-down-right'" class="w-4 h-4"></i>
+                <span x-text="`${savings >= 0 ? '+' : '−'} ${fmt(Math.abs(savings))} este mes`"></span>
+              </div>
+              <p class="relative mt-auto pt-6 text-xs text-white/70 flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> <span x-text="monthLabel"></span>
+              </p>
+            </div>
+
+            <!-- Resumen del mes: flujos + presupuesto -->
+            <div class="col-span-12 lg:col-span-7 card anim-rise">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resumen del mes</h2>
+                <button @click="goTo('movimientos')" class="text-xs font-semibold text-accent hover:underline">Ver movimientos</button>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="w-9 h-9 rounded-xl grid place-items-center bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400 mb-3">
+                    <i data-lucide="trending-up" class="w-[18px] h-[18px]"></i>
+                  </div>
+                  <p class="text-base xl:text-lg font-bold tabular-nums truncate text-emerald-600 dark:text-emerald-400" x-text="fmt(totalIncome)"></p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ingresos</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="w-9 h-9 rounded-xl grid place-items-center bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400 mb-3">
+                    <i data-lucide="credit-card" class="w-[18px] h-[18px]"></i>
+                  </div>
+                  <p class="text-base xl:text-lg font-bold tabular-nums truncate text-rose-600 dark:text-rose-400" x-text="fmt(totalExpenses)"></p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gastos</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="w-9 h-9 rounded-xl grid place-items-center bg-accent/10 text-accent mb-3">
+                    <i data-lucide="piggy-bank" class="w-[18px] h-[18px]"></i>
+                  </div>
+                  <p class="text-base xl:text-lg font-bold tabular-nums truncate" :class="savings < 0 ? 'text-rose-600 dark:text-rose-400' : ''" x-text="fmt(savings)"></p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ahorro</p>
+                </div>
+              </div>
+              <div class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex items-center justify-between text-sm mb-2">
+                  <span class="font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <i data-lucide="gauge" class="w-4 h-4 text-slate-400"></i> Presupuesto
+                  </span>
+                  <span class="tabular-nums"><span class="font-semibold" x-text="fmt(remainingBudget)"></span> <span class="text-slate-400 text-xs">restante</span></span>
+                </div>
+                <div class="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-700"
+                    :class="budgetPct >= 100 ? 'bg-rose-500' : budgetPct >= 90 ? 'bg-amber-500' : 'bg-accent'"
+                    :style="`width:${Math.min(budgetPct, 100)}%`"></div>
+                </div>
+                <p class="text-xs text-slate-400 mt-1.5 tabular-nums" x-text="`${budgetPct}% usado de ${fmt(state.budget)}`"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuentas -->
+          <div x-show="widgetOn('accounts')">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="text-lg font-bold tracking-tight">Cuentas</h2>
+              <button @click="goTo('cuentas')" class="btn-ghost py-1.5 px-3 text-xs">
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i> Gestionar
+              </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+              <template x-for="a in activeAccounts" :key="a.id">
+                <div @click="goTo('cuentas')" title="Ver cuentas"
+                  class="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-slate-800 p-5 h-36 cursor-pointer transition hover:-translate-y-0.5 hover:shadow-xl group"
+                  :style="`background:linear-gradient(135deg, ${a.color}1f 0%, ${a.color}0d 55%, transparent 100%)`">
+                  <span class="absolute -bottom-6 -right-6 w-28 h-28 rounded-full opacity-15 transition group-hover:scale-110" :style="`background:${a.color}`"></span>
+                  <i :data-lucide="a.icon" class="absolute right-4 top-4 w-8 h-8 opacity-25" :style="`color:${a.color}`"></i>
+                  <div class="relative flex flex-col justify-between h-full">
+                    <div>
+                      <p class="text-[11px] font-bold uppercase tracking-wider" :style="`color:${a.color}`" x-text="accountTypeLabel(a.type)"></p>
+                      <p class="mt-2 text-lg font-bold tracking-tight tabular-nums truncate" x-text="fmt(a.balance)"></p>
+                    </div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium truncate" x-text="a.name"></p>
+                  </div>
+                </div>
+              </template>
+              <button @click="goTo('cuentas')"
+                class="rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-accent hover:border-accent transition grid place-items-center h-36">
+                <span class="flex flex-col items-center gap-1.5 text-sm font-medium">
+                  <i data-lucide="plus" class="w-5 h-5"></i> Nueva cuenta
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Análisis de gastos (dona por categoría) -->
+          <section class="card" x-show="widgetOn('analytics')">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-bold tracking-tight">Análisis de gastos</h2>
+              <span class="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-3 py-1.5 rounded-full tabular-nums" x-text="monthLabel"></span>
+            </div>
+
+            <template x-if="hasChartData">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="relative h-56 w-56 mx-auto">
+                  <canvas id="chart-analytics"></canvas>
+                </div>
+                <ul class="space-y-3.5">
+                  <template x-for="b in breakdown" :key="b.cat.id">
+                    <li class="flex items-center gap-3 anim-item">
+                      <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="`background:${b.cat.color}`"></span>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium flex items-center gap-2">
+                          <span x-text="b.cat.label"></span>
+                          <span class="text-xs text-slate-400 tabular-nums" x-text="`${b.pct.toFixed(0)}%`"></span>
+                        </p>
+                        <p class="text-xs text-slate-400 tabular-nums" x-text="fmt(b.amount)"></p>
+                      </div>
+                      <div class="w-7 h-7 rounded-lg grid place-items-center shrink-0" :style="`background:${b.cat.color}1a; color:${b.cat.color}`">
+                        <i :data-lucide="b.cat.icon" class="w-3.5 h-3.5"></i>
+                      </div>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </template>
+
+            <template x-if="!hasChartData">
+              <div class="text-center py-12">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                  <i data-lucide="chart-pie" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+                </div>
+                <p class="font-semibold">Aún no hay gastos este mes</p>
+                <p class="text-sm text-slate-400 mt-1 mb-5">Registra tu primer gasto o prueba con datos de ejemplo.</p>
+                <div class="flex justify-center gap-2">
+                  <button @click="loadDemo" class="btn-ghost">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-accent"></i> Datos de ejemplo
+                  </button>
+                  <button @click="openTxModal('expense')" class="btn-ghost text-accent">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Registrar gasto
+                  </button>
+                </div>
+              </div>
+            </template>
+          </section>
+
+          </div><!-- /PESTAÑA RESUMEN -->
+
+          <!-- ========================= PESTAÑA: GASTOS ========================= -->
+          <div x-show="inicioTab === 'gastos'" class="space-y-6">
+
+          <!-- Presupuesto del mes -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('budget')">
+            <section class="col-span-12 card" x-show="widgetOn('budget')">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold tracking-tight">Presupuesto del mes</h2>
+                <button @click="goTo('presupuestos')" class="btn-icon w-9 h-9" title="Ver presupuestos">
+                  <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <template x-if="alert">
+                <p class="mb-5 text-[13px] font-medium px-3.5 py-2.5 rounded-2xl flex items-center gap-2"
+                  :class="alert.kind === 'danger' ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'">
+                  <i :data-lucide="alert.kind === 'danger' ? 'triangle-alert' : 'circle-check'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="alert.text"></span>
+                </p>
+              </template>
+
+              <template x-if="budgetRows.length === 0">
+                <div class="text-center py-10">
+                  <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                    <i data-lucide="gauge" class="w-6 h-6 text-slate-300 dark:text-slate-600"></i>
+                  </div>
+                  <p class="text-sm text-slate-400">Define presupuestos por categoría para ver su avance aquí.</p>
+                  <button @click="goTo('presupuestos')" class="btn-ghost mt-4 text-xs">Configurar presupuestos</button>
+                </div>
+              </template>
+
+              <ul class="space-y-5">
+                <template x-for="r in budgetRows" :key="r.cat.id">
+                  <li>
+                    <div class="flex items-center gap-2.5 mb-2">
+                      <div class="w-8 h-8 rounded-xl grid place-items-center" :style="`background:${r.cat.color}1a; color:${r.cat.color}`">
+                        <i :data-lucide="r.cat.icon" class="w-4 h-4"></i>
+                      </div>
+                      <span class="flex-1 text-sm font-medium truncate" x-text="r.cat.label"></span>
+                      <span class="text-sm font-semibold tabular-nums" x-text="fmt(r.spent)"></span>
+                      <span class="text-xs text-slate-400 tabular-nums" x-text="`/ ${fmt(r.budget)}`"></span>
+                    </div>
+                    <div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${r.pct}%; background:${r.barColor}`"></div>
+                    </div>
+                    <template x-if="r.over">
+                      <p class="text-xs text-rose-500 mt-1 font-medium" x-text="`Superado por ${fmt(r.spent - r.budget)}`"></p>
+                    </template>
+                    <template x-if="r.warn && !r.over">
+                      <p class="text-xs text-amber-500 mt-1 font-medium" x-text="`Usaste el ${r.raw.toFixed(0)}% del presupuesto`"></p>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </div>
+
+          <!-- Top gastos + Visión mensual -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('top') || widgetOn('overview')">
+            <section class="col-span-12 lg:col-span-5 card" x-show="widgetOn('top')">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Top gastos del mes</h2>
+                <button @click="goTo('reportes')" class="text-xs font-semibold text-accent hover:underline">Ver reportes</button>
+              </div>
+              <template x-if="top5.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Sin gastos este mes.</p>
+              </template>
+              <ol class="space-y-3">
+                <template x-for="(g, i) in top5" :key="g.id">
+                  <li class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center text-lg shrink-0" :class="i < 3 ? 'bg-slate-100 dark:bg-slate-800' : 'bg-transparent'" x-text="['🥇','🥈','🥉'][i] || `${i + 1}.`"></span>
+                    <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0" :style="`background:${g.cat.color}1a; color:${g.cat.color}`">
+                      <i :data-lucide="g.cat.icon" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate" x-text="g.description || g.cat.label"></p>
+                      <p class="text-xs text-slate-400" x-text="`${g.cat.label} · ${tableDate(g.date)}`"></p>
+                    </div>
+                    <span class="font-semibold tabular-nums text-sm shrink-0">−<span x-text="fmt(g.amount)"></span></span>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <section class="col-span-12 lg:col-span-7 card" x-show="widgetOn('overview')">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold tracking-tight">Visión mensual</h2>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-accent"></span> Ingresos</span>
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Gastos</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas id="chart-overview"></canvas>
+              </div>
+            </section>
+          </div>
+
+          </div><!-- /PESTAÑA GASTOS -->
+
+          <!-- ========================= PESTAÑA: ACTIVIDAD ========================= -->
+          <div x-show="inicioTab === 'actividad'" class="space-y-6">
+
+          <!-- Transacciones recientes + Insights -->
+          <div class="grid grid-cols-12 gap-6" x-show="widgetOn('recent') || widgetOn('insights')">
+            <section class="col-span-12 lg:col-span-7 card" x-show="widgetOn('recent')">
+              <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Transacciones recientes</h2>
+                <button @click="goTo('movimientos')" class="text-xs font-semibold text-accent hover:underline">Ver todos los movimientos</button>
+              </div>
+
+              <template x-if="recentTx.length > 0">
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <template x-for="t in recentTx" :key="t.rec.id">
+                    <li class="flex items-center gap-3 py-3 group">
+                      <div class="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+                        :class="t.kind === 'income' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : t.kind === 'transfer' ? 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400' : ''"
+                        :style="t.kind === 'expense' ? `background:${t.cat.color}1a; color:${t.cat.color}` : ''">
+                        <i x-show="t.kind === 'income'" data-lucide="arrow-down-left" class="w-[18px] h-[18px]"></i>
+                        <i x-show="t.kind === 'transfer'" data-lucide="arrow-right-left" class="w-[18px] h-[18px]"></i>
+                        <i x-show="t.kind === 'expense'" :data-lucide="t.cat?.icon" class="w-[18px] h-[18px]"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm truncate" x-text="t.rec.description || (t.kind === 'income' ? 'Ingreso' : t.kind === 'transfer' ? 'Transferencia' : t.cat.label)"></p>
+                        <p class="text-xs text-slate-400 truncate" x-text="`${tableDate(t.rec.date)} · ${t.acct.name}${t.toAcct ? ' → ' + t.toAcct.name : ''}`"></p>
+                      </div>
+                      <span class="font-semibold tabular-nums text-sm shrink-0" :class="t.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : t.kind === 'transfer' ? 'text-sky-500' : 'text-slate-900 dark:text-slate-100'">
+                        <span x-show="t.kind === 'income'">+</span><span x-show="t.kind === 'expense'">−</span><span x-text="fmt(t.rec.amount)"></span>
+                      </span>
+                    </li>
+                  </template>
+                </ul>
+              </template>
+
+              <template x-if="recentTx.length === 0">
+                <div class="text-center py-12">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                    <i data-lucide="receipt" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+                  </div>
+                  <p class="font-semibold">Sin movimientos este mes</p>
+                  <p class="text-sm text-slate-400 mt-1 mb-5">Usa el botón flotante para registrar tu primer gasto o ingreso.</p>
+                  <button @click="loadDemo" class="btn-ghost">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-accent"></i> Datos de ejemplo
+                  </button>
+                </div>
+              </template>
+            </section>
+
+            <section class="col-span-12 lg:col-span-5 card" x-show="widgetOn('insights')">
+              <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold tracking-tight">Resumen inteligente</h2>
+                <span class="chip bg-accent/10 text-accent"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Insights</span>
+              </div>
+              <template x-if="insights.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Registra movimientos para generar tu resumen inteligente.</p>
+              </template>
+              <ul class="space-y-3">
+                <template x-for="(ins, i) in insights" :key="i">
+                  <li class="flex items-start gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition anim-item"
+                    :class="ins.tone === 'bad' ? 'bg-rose-50/60 dark:bg-rose-500/5' : ins.tone === 'warn' ? 'bg-amber-50/60 dark:bg-amber-500/5' : ''">
+                    <div class="w-8 h-8 rounded-xl grid place-items-center shrink-0"
+                      :class="ins.tone === 'ok' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : ins.tone === 'warn' ? 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400' : ins.tone === 'bad' ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+                      <i :data-lucide="ins.icon" class="w-4 h-4"></i>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" x-text="ins.text"></p>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </div>
+
+          </div><!-- /PESTAÑA ACTIVIDAD -->
+        </section>
+</template>

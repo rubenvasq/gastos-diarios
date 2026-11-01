@@ -1,0 +1,157 @@
+<template x-if="view === 'reportes'">
+<section id="view-reportes" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Reportes</h2>
+              <p class="text-sm text-slate-400 mt-0.5" x-text="monthLabel"></p>
+            </div>
+            <div class="flex flex-wrap gap-2 no-print">
+              <button @click="doExportReportsCSV" class="btn-ghost"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-accent"></i> Exportar CSV</button>
+              <button @click="doExport" class="btn-ghost"><i data-lucide="download" class="w-4 h-4 text-accent"></i> Exportar JSON</button>
+              <button @click="doPrint" class="btn-ghost"><i data-lucide="printer" class="w-4 h-4 text-accent"></i> Imprimir</button>
+            </div>
+          </div>
+
+          <!-- Filtros de reporte -->
+          <div class="card p-5 flex flex-wrap items-end gap-3 no-print">
+            <div class="w-full sm:w-48">
+              <label class="form-label">Mes</label>
+              <div class="flex items-center gap-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-1">
+                <button @click="changeMonth(-1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700" title="Mes anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                <span class="flex-1 text-center text-sm font-semibold" x-text="monthLabel"></span>
+                <button @click="changeMonth(1)" class="w-8 h-8 grid place-items-center rounded-xl text-slate-500 transition hover:bg-white dark:hover:bg-slate-700" title="Mes siguiente"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Categoría</label>
+              <select x-model="reportCategory" class="field text-sm">
+                <option value="all">Todas</option>
+                <template x-for="c in categories" :key="c.id">
+                  <option :value="c.id" x-text="c.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Cuenta</label>
+              <select x-model="reportAccount" class="field text-sm">
+                <option value="all">Todas</option>
+                <template x-for="a in accounts" :key="a.id">
+                  <option :value="a.id" x-text="a.name"></option>
+                </template>
+              </select>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="form-label">Tipo de movimiento</label>
+              <select x-model="reportType" class="field text-sm">
+                <option value="all">Todos</option>
+                <option value="expense">Gastos</option>
+                <option value="income">Ingresos</option>
+                <option value="transfer">Transferencias</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Resumen del mes -->
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Ingresos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums text-emerald-500" x-text="fmt(totalIncome)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Gastos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums text-rose-500" x-text="fmt(reportTotal)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Ahorro</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums" :class="savings >= 0 ? 'text-slate-900 dark:text-slate-100' : 'text-rose-500'" x-text="fmt(savings)"></p>
+            </div>
+            <div class="col-span-6 lg:col-span-3 card p-5">
+              <p class="text-sm text-slate-400 mb-1">Movimientos</p>
+              <p class="text-xl font-bold tracking-tight tabular-nums" x-text="allTx.length"></p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Bar: ingresos vs gastos -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <div class="flex items-center justify-between mb-5">
+                <h3 class="font-bold">Ingresos vs gastos</h3>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-accent"></span> Ingresos</span>
+                  <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Gastos</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas id="chart-ivg"></canvas>
+              </div>
+            </section>
+
+            <!-- Line: evolución mensual -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Evolución mensual</h3>
+              <div class="h-64">
+                <canvas id="chart-evo"></canvas>
+              </div>
+            </section>
+
+            <!-- Bar: gastos por cuenta -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Gastos por cuenta</h3>
+              <template x-if="reportByAccount.length > 0">
+                <div class="h-64">
+                  <canvas id="chart-acct"></canvas>
+                </div>
+              </template>
+              <template x-if="reportByAccount.length === 0">
+                <p class="text-sm text-slate-400 py-12 text-center">Sin gastos para los filtros seleccionados.</p>
+              </template>
+            </section>
+
+            <!-- Line: ahorro mensual -->
+            <section class="col-span-12 lg:col-span-6 card">
+              <h3 class="font-bold mb-5">Ahorro mensual</h3>
+              <div class="h-64">
+                <canvas id="chart-sav"></canvas>
+              </div>
+            </section>
+
+            <!-- Top gastos -->
+            <section class="col-span-12 card">
+              <h3 class="font-bold mb-5">Top gastos del mes</h3>
+              <template x-if="top5.length === 0">
+                <p class="text-sm text-slate-400 py-8 text-center">Sin gastos este mes.</p>
+              </template>
+              <ol class="space-y-3">
+                <template x-for="(g, i) in top5" :key="g.id">
+                  <li class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center text-lg shrink-0" x-text="['🥇','🥈','🥉'][i] || `${i + 1}.`"></span>
+                    <div class="w-9 h-9 rounded-xl grid place-items-center shrink-0" :style="`background:${g.cat.color}1a; color:${g.cat.color}`">
+                      <i :data-lucide="g.cat.icon" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate" x-text="g.description || g.cat.label"></p>
+                      <p class="text-xs text-slate-400" x-text="`${g.cat.label} · ${tableDate(g.date)}`"></p>
+                    </div>
+                    <span class="font-semibold tabular-nums text-sm shrink-0">−<span x-text="fmt(g.amount)"></span></span>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <!-- Proyección estimada -->
+            <section class="col-span-12 card">
+              <h3 class="font-bold mb-5">Proyección de ahorro anual</h3>
+              <div class="grid grid-cols-12 gap-5">
+                <template x-for="p in projection" :key="p.month">
+                  <div class="col-span-6 sm:col-span-3 lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-3.5">
+                    <p class="text-xs text-slate-400 uppercase tracking-wide" x-text="p.label"></p>
+                    <p class="text-sm font-bold tabular-nums mt-1" :class="p.value >= 0 ? 'text-accent' : 'text-rose-500'" x-text="fmt(p.value)"></p>
+                    <p class="text-[11px] text-slate-400 mt-0.5" x-text="`${p.month === viewMonth ? 'Actual' : 'Estimado'}`"></p>
+                  </div>
+                </template>
+              </div>
+              <p class="text-xs text-slate-400 mt-4 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Proyección estimada a partir de tus ingresos y gastos del año. No es una garantía de ahorro.</p>
+            </section>
+          </div>
+        </section>
+</template>

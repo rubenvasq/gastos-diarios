@@ -1,0 +1,63 @@
+<template x-if="view === 'deudas'">
+<section id="view-deudas" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Deudas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Seguimiento de obligaciones y pagos.</p>
+            </div>
+            <button @click="openDebtModal()" class="btn-primary hover:-translate-y-px">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva deuda
+            </button>
+          </div>
+
+          <template x-if="debtList.length === 0">
+            <div class="card text-center py-12">
+              <i data-lucide="banknote" class="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+              <p class="text-sm text-slate-400 mb-1">Aún no tienes deudas registradas.</p>
+              <button @click="openDebtModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Registrar una deuda</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="d in debtList" :key="d.id">
+              <div class="col-span-12 lg:col-span-6 card p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-10 h-10 rounded-2xl grid place-items-center shrink-0" :style="`background:${d.color}1a;color:${d.color}`">
+                      <i :data-lucide="d.icon" class="w-5 h-5"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-sm truncate" x-text="d.name"></p>
+                      <p class="text-xs text-slate-400 truncate" x-text="d.creditor || (d.status === 'pagada' ? 'Pagada' : 'Deuda activa')"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button @click="openDebtModal(d)" class="btn-icon w-8 h-8" title="Editar deuda"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteDebt(d)" class="btn-icon w-8 h-8 text-rose-400 hover:text-rose-500" title="Eliminar deuda"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="text-slate-400" x-text="`${d.pct}% pagado`"></span>
+                    <span class="font-semibold tabular-nums text-rose-500" x-text="fmt(d.balance)"></span>
+                  </div>
+                  <div class="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500 bg-rose-500" :style="`width:${d.pct}%`"></div>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5" x-text="`De ${fmt(d.original)} · Cuota ${fmt(d.quota)}`"></p>
+                  <p class="text-xs mt-0.5" x-show="d.status === 'activa' && d.daysUntil != null"
+                    :class="d.daysUntil >= 0 && d.daysUntil <= 7 ? 'text-amber-500' : 'text-slate-400'"
+                    x-text="d.nextDate ? `Próximo pago: ${formatDate(d.nextDate)} (${d.daysUntil} día(s))` : ''"></p>
+                  <p class="text-xs text-emerald-500 mt-0.5" x-show="d.status === 'pagada'">✓ Deuda pagada</p>
+                </div>
+
+                <div class="flex gap-2">
+                  <button @click="openDebtPayment(d)" x-show="d.status !== 'pagada'" class="flex-1 btn-ghost py-2 text-sm"><i data-lucide="wallet" class="w-4 h-4 text-accent"></i> Pagar cuota</button>
+                  <button @click="markDebtPaid(d)" x-show="d.status !== 'pagada'" class="btn-ghost py-2 text-sm text-emerald-500"><i data-lucide="check-check" class="w-4 h-4"></i> Pagada</button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+</template>

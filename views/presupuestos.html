@@ -1,0 +1,96 @@
+<template x-if="view === 'presupuestos'">
+<section id="view-presupuestos" x-cloak class="scroll-mt-24 space-y-6">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight">Presupuestos</h2>
+            <p class="text-sm text-slate-400 mt-0.5">Define límites mensuales por categoría y controla tu avance.</p>
+          </div>
+
+          <!-- Presupuesto global -->
+          <div class="card">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 class="font-bold">Presupuesto mensual</h3>
+                <p class="text-sm text-slate-400">Límite global para todos tus gastos.</p>
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold tracking-tight tabular-nums" x-text="fmt(state.budget)"></p>
+                <p class="text-xs text-slate-400 tabular-nums" x-text="`Gastado: ${fmt(totalExpenses)} · Restante: ${fmt(remainingBudget)}`"></p>
+              </div>
+            </div>
+            <input type="range" min="0" max="10000000" step="100000" :value="state.budget" @input="setBudget($event.target.value)" class="w-full accent-emerald-500 mb-2">
+            <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1">
+              <div class="h-full rounded-full transition-all duration-700 ease-out"
+                :style="`width:${budgetPct}%; ${budgetPct >= 100 ? 'background:#F43F5E' : budgetPct >= 90 ? 'background:#F59E0B' : 'background:rgb(var(--accent))'}`"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span x-text="`${budgetPct}% usado`"></span>
+              <span x-text="`0% · 100%`"></span>
+            </div>
+            <div class="mt-4 flex flex-wrap items-end gap-3">
+              <div class="w-56">
+                <label class="form-label">Editar presupuesto</label>
+                <input type="number" min="0" step="10000" :value="state.budget" @change="setBudget($event.target.value)" class="field text-sm">
+              </div>
+              <template x-if="alert">
+                <p class="flex-1 text-[13px] font-medium px-3.5 py-2.5 rounded-2xl flex items-center gap-2"
+                  :class="alert.kind === 'danger' ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'">
+                  <i :data-lucide="alert.kind === 'danger' ? 'triangle-alert' : 'circle-check'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="alert.text"></span>
+                </p>
+              </template>
+            </div>
+          </div>
+
+          <!-- Alertas por categoría -->
+          <template x-if="budgetRows.filter(r => r.over || r.warn).length > 0">
+            <div class="space-y-2">
+              <template x-for="r in budgetRows.filter(r => r.over || r.warn)" :key="r.cat.id">
+                <p class="text-[13px] font-medium px-4 py-3 rounded-2xl flex items-center gap-2"
+                  :class="r.over ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'">
+                  <i :data-lucide="r.over ? 'triangle-alert' : 'circle-alert'" class="w-4 h-4 shrink-0"></i>
+                  <span x-text="r.over ? `Has superado tu presupuesto de ${r.cat.label} por ${fmt(r.spent - r.budget)}.` : `Has utilizado el ${r.raw.toFixed(0)}% de tu presupuesto de ${r.cat.label}.`"></span>
+                </p>
+              </template>
+            </div>
+          </template>
+
+          <!-- Presupuestos por categoría -->
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="r in allBudgetRows" :key="r.cat.id">
+              <div class="col-span-12 md:col-span-6 xl:col-span-4 card">
+                <div class="flex items-center gap-2.5 mb-3">
+                  <div class="w-9 h-9 rounded-xl grid place-items-center" :style="`background:${r.cat.color}1a; color:${r.cat.color}`">
+                    <i :data-lucide="r.cat.icon" class="w-4 h-4"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-sm truncate" x-text="r.cat.label"></p>
+                    <p class="text-xs text-slate-400" x-text="r.budget > 0 ? `Gastado ${fmt(r.spent)} de ${fmt(r.budget)}` : 'Sin presupuesto definido'"></p>
+                  </div>
+                </div>
+
+                <template x-if="r.budget > 0">
+                  <div class="mb-3">
+                    <div class="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-700 ease-out" :style="`width:${r.pct}%; background:${r.barColor}`"></div>
+                    </div>
+                    <div class="flex items-center justify-between mt-1.5 text-xs">
+                      <span class="text-slate-400" x-text="`${r.raw.toFixed(0)}% usado`"></span>
+                      <span class="font-semibold tabular-nums" :class="r.over ? 'text-rose-500' : r.warn ? 'text-amber-500' : 'text-emerald-500'"
+                        x-text="r.over ? `+${fmt(r.spent - r.budget)}` : `${fmt(r.budget - r.spent)} restante`"></span>
+                    </div>
+                  </div>
+                </template>
+                <template x-if="r.budget === 0">
+                  <p class="text-xs text-slate-400 mb-3">Establece un límite para controlar esta categoría.</p>
+                </template>
+
+                <div class="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <span class="text-xs text-slate-400">Límite</span>
+                  <input type="number" min="0" step="10000" :value="r.budget" @change="setCatBudget(r.cat.id, $event.target.value)"
+                    class="w-32 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1.5 text-right text-sm font-semibold tabular-nums outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/15">
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+</template>

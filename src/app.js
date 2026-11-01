@@ -5,6 +5,14 @@ import * as fin from './finance.js';
 import * as validation from './validation.js';
 import * as backup from './backup.js';
 import { downloadJSON, downloadCSV, downloadText } from './export.js';
+import { createBridge } from './agent/bridge.js';
+import { gastosTools } from './agent/tools.js';
+import { GASTOS_SYSTEM_PROMPT } from './agent/systemPrompt.js';
+// Alpine se importa como módulo (build ESM que NO auto-arranca) para poder
+// precargar el almacén (IndexedDB) antes de iniciarlo manualmente al final.
+import Alpine from '../vendor/alpine.esm.js';
+import { initStorage } from './db.js';
+window.Alpine = Alpine;
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -24,6 +32,7 @@ const NAV_ITEMS = [
   { id: 'calendario',   icon: 'calendar-days',    label: 'Calendario' },
   { id: 'recurrentes',  icon: 'repeat',           label: 'Recurrentes' },
   { id: 'categorias',   icon: 'tags',             label: 'Categorías' },
+  { id: 'asistente',    icon: 'sparkles',         label: 'Asistente IA' },
 ];
 // Configuración se abre como pantalla aparte desde el perfil (no va en el menú lateral)
 
@@ -93,13 +102,11 @@ document.addEventListener('alpine:init', () => {
 
     // ---- Vista / navegación ----
     view: 'inicio',
+    inicioTab: 'resumen', // pestaña activa del dashboard: 'resumen' | 'gastos' | 'actividad'
     viewYear: new Date().getFullYear(),
     viewMonth: new Date().getMonth(),
     sidebarOpen: false,
     sidebarCollapsed: false,
-    _navLock: false,   // silencia el scroll-spy durante el scroll programático
-    _navTimer: null,
-    _spyTick: null,
     showConfig: false, // Configuración como pantalla aparte de lo principal
     notifOpen: false,
     profileOpen: false,
@@ -120,6 +127,28 @@ document.addEventListener('alpine:init', () => {
     // ---- Búsqueda global ----
     globalSearchOpen: false,
     globalQuery: '',
+
+    // ---- Asistente IA (agente con tool use) ----
+    // El motor del agente vive en src/agent/engine.js (bundle compilado desde
+    // sistefa-ai-agent). Aquí solo guardamos el estado del chat y la config del
+    // proveedor. La API key la pega el usuario; queda solo en su navegador.
+    chatMessages: [],   // { role: 'user'|'assistant'|'tool', content, tools? }
+    chatInput: '',
+    chatBusy: false,
+    chatError: '',
+    llmKey: localStorage.getItem('gd-llm-key') || '',
+    llmModel: localStorage.getItem('gd-llm-model') || 'llama-3.3-70b-versatile',
+    _agentRepo: null,   // cache del puente sobre este componente
+
+    // ---- Voz (Web Speech API): leer respuestas en voz alta ----
+    // Nativo del navegador, cero librerías. SpeechSynthesis lee la respuesta
+    // del agente. Degrada: si no hay soporte, speakSupported es false y la UI
+    // oculta el botón. (El dictado por micrófono se retiró: requería internet.)
+    speakReplies: localStorage.getItem('gd-speak-replies') === '1',
+
+    // ---- Resumen proactivo (el agente te saluda con lo importante) ----
+    // Se descarta por día: si ya se vio hoy, no reaparece hasta mañana.
+    briefingDismissed: localStorage.getItem('gd-briefing-date') === new Date().toISOString().slice(0, 10),
 
     // ---- Filtros de Reportes ----
     reportCategory: 'all',
@@ -146,14 +175,17 @@ document.addEventListener('alpine:init', () => {
     recForm: null,
 
     // ---- Modal de meta ----
+    // goalForm arranca con la forma por defecto (no null) para que los enlaces
+    // del modal no fallen antes de abrirlo; la visibilidad la controla goalModalOpen.
     goalModalOpen: false,
-    goalForm: null,
+    goalForm: { id: null, name: '', targetAmount: '', savedAmount: 0, targetDate: '', icon: 'target', color: '#10B981' },
     goalContribution: { id: null, amount: '', account: '' },
     goalContribOpen: false,
 
     // ---- Modal de deuda ----
+    // Igual que goalForm: forma por defecto en vez de null (ver nota arriba).
     debtModalOpen: false,
-    debtForm: null,
+    debtForm: { id: null, name: '', creditor: '', originalAmount: '', balance: '', quota: 0, nextDate: '', status: 'activa', icon: 'banknote', color: '#EF4444' },
     debtPayment: { id: null, amount: '', account: '' },
     debtPayOpen: false,
 
@@ -200,8 +232,15 @@ document.addEventListener('alpine:init', () => {
     // Cache del análisis de salud (se invalida en _save/undo).
     _analysisCache: null,
 
+    // Reloj reactivo para los tiempos relativos ("hace 5 min"); se refresca
+    // cada minuto en init() para que las etiquetas se actualicen solas.
+    _now: Date.now(),
+
     // ============================================================
     init() {
+      // Refresca el reloj reactivo cada minuto (tiempos relativos "hace N min").
+      setInterval(() => { this._now = Date.now(); }, 60000);
+
       applyAccent(this.accent);
       applyMode(this.mode);
 
@@ -219,8 +258,7 @@ document.addEventListener('alpine:init', () => {
           }
         });
 
-      // El spy se registra aparte para que un fallo en renderCharts no lo impida
-      this._setupScrollSpy();
+      // Se muestra una sola vista a la vez (x-if), sin scroll-spy; la vista la fija goTo().
       this._setupShortcuts();
 
       // Configuración como página con URL propia (#config): sincroniza con el
@@ -256,34 +294,6 @@ document.addEventListener('alpine:init', () => {
         refreshIcons();
         this.renderCharts();
       });
-    },
-
-    // Resalta en la barra lateral la sección donde estás al desplazarte
-    _setupScrollSpy() {
-      const ids = NAV_ITEMS.map((n) => n.id);
-      const line = 96; // px desde arriba (justo bajo la topbar fija)
-      const pick = () => {
-        if (this._navLock || this.showConfig) return;
-        let current = ids[0];
-        for (const id of ids) {
-          const el = document.getElementById('view-' + id);
-          if (el && el.getBoundingClientRect().top - line <= 0) current = id;
-        }
-        // Al llegar al fondo, activa la última sección aunque sea corta
-        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
-          current = ids[ids.length - 1];
-        }
-        if (this.view !== current) this.view = current;
-      };
-      // requestAnimationFrame para no recalcular en cada píxel de scroll
-      const onScroll = () => {
-        if (this._spyTick) return;
-        this._spyTick = requestAnimationFrame(() => { this._spyTick = null; pick(); });
-      };
-      // capture:true para captar también el scroll de contenedores internos
-      window.addEventListener('scroll', onScroll, { passive: true, capture: true });
-      window.addEventListener('resize', onScroll, { passive: true });
-      pick();
     },
 
     // Atajos de teclado: N/G gasto, I ingreso, T transferencia, / búsqueda,
@@ -647,6 +657,64 @@ document.addEventListener('alpine:init', () => {
       });
     },
 
+    // ---- Resumen proactivo del día ----
+    // Prioriza lo accionable (alertas danger > warning) y suma el insight más
+    // relevante + una nota positiva. Todo se calcula de los datos (sin IA); el
+    // asistente solo lo amplía si el usuario lo pide. Esto es lo que convierte
+    // un panel pasivo en un agente que te saluda con lo importante.
+    get dailyBriefing() {
+      const hour = new Date().getHours();
+      const greet = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+      const alerts = this.alerts;
+      const danger = alerts.filter((a) => a.level === 'danger');
+      const warning = alerts.filter((a) => a.level === 'warning');
+      const good = alerts.filter((a) => a.level === 'success');
+      const items = [];
+
+      // 1) Lo urgente primero
+      danger.slice(0, 2).forEach((a) => items.push({ icon: a.icon, text: a.text, tone: 'danger' }));
+      // 2) Advertencias si queda espacio
+      warning.slice(0, 2 - items.length < 0 ? 0 : 2 - items.length).forEach((a) =>
+        items.push({ icon: a.icon, text: a.text, tone: 'warn' })
+      );
+      // 3) El insight más relevante (observación de datos)
+      const ins = this.insights[0];
+      if (ins && items.length < 3) items.push({ icon: ins.icon || 'sparkles', text: ins.text, tone: 'info' });
+      // 4) Una nota positiva para cerrar bien
+      if (good[0] && items.length < 3) items.push({ icon: good[0].icon, text: good[0].text, tone: 'good' });
+
+      // Titular según el tono dominante
+      let headline;
+      let tone;
+      if (danger.length) { headline = 'Tienes algo que requiere tu atención'; tone = 'danger'; }
+      else if (warning.length) { headline = 'Un par de cosas por revisar'; tone = 'warn'; }
+      else if (items.length) { headline = 'Todo en orden — aquí tu resumen'; tone = 'good'; }
+      else { headline = 'Sin novedades: tus finanzas están tranquilas'; tone = 'good'; }
+
+      return { greet, headline, tone, items };
+    },
+
+    // Muestra el resumen si no se descartó hoy y hay algo que decir.
+    get showBriefing() {
+      return !this.briefingDismissed && this.dailyBriefing.items.length > 0;
+    },
+
+    dismissBriefing() {
+      this.briefingDismissed = true;
+      localStorage.setItem('gd-briefing-date', new Date().toISOString().slice(0, 10));
+    },
+
+    // Abre el asistente y, si hay API key, le pide ampliar el resumen; si no,
+    // igual lleva al chat (que muestra cómo configurar la key).
+    askAgentAboutBriefing() {
+      this.goTo('asistente');
+      this.dismissBriefing();
+      if (this.llmKey.trim()) {
+        this.chatInput = 'Dame un resumen de mis finanzas de este mes y dime qué debería priorizar.';
+        this.$nextTick(() => this.sendToAgent());
+      }
+    },
+
     // ---- Recurrentes ----
     get recurringList() {
       const t = stats.todayStr();
@@ -837,6 +905,30 @@ document.addEventListener('alpine:init', () => {
       });
     },
 
+    // Hora de ingreso en formato relativo: "hace un momento", "hace 5 min",
+    // "hace 2 h", "ayer", "hace 3 días"… a partir del createdAt del registro.
+    // Depende de this._now (actualizado cada minuto) para refrescarse solo.
+    relativeTime(createdAt) {
+      if (!createdAt) return '';
+      const then = new Date(createdAt).getTime();
+      if (isNaN(then)) return '';
+      const diff = Math.max(0, this._now - then);
+      const min = Math.floor(diff / 60000);
+      if (min < 1) return 'hace un momento';
+      if (min < 60) return `hace ${min} min`;
+      const hrs = Math.floor(min / 60);
+      if (hrs < 24) return `hace ${hrs} h`;
+      const days = Math.floor(hrs / 24);
+      if (days === 1) return 'ayer';
+      if (days < 7) return `hace ${days} días`;
+      const weeks = Math.floor(days / 7);
+      if (weeks < 5) return `hace ${weeks} sem`;
+      const months = Math.floor(days / 30);
+      if (months < 12) return `hace ${months} mes${months === 1 ? '' : 'es'}`;
+      const years = Math.floor(days / 365);
+      return `hace ${years} año${years === 1 ? '' : 's'}`;
+    },
+
     // ============================================================
     // Navegación
     // ============================================================
@@ -845,19 +937,19 @@ document.addEventListener('alpine:init', () => {
       if (location.hash === '#config') {
         history.replaceState(null, '', location.pathname + location.search);
       }
+      // Destruye las gráficas antes de desmontar la vista (x-if) para que Chart.js
+      // no intente dibujar sobre un canvas ya removido. renderCharts() las recrea.
+      for (const k in this._charts) { this._charts[k].destroy(); delete this._charts[k]; }
       this.view = id;
       this.sidebarOpen = false;
       this.fabOpen = false;
-      // Bloquea el scroll-spy mientras dura el desplazamiento programático
-      this._navLock = true;
-      clearTimeout(this._navTimer);
-      this._navTimer = setTimeout(() => { this._navLock = false; }, 700);
+      // Solo se ve la vista activa (x-if). Subimos al tope y re-renderizamos sus
+      // gráficas en rAF (tras montarse la vista, el canvas necesita un frame para
+      // tener tamaño; _chart ignora canvas con offsetParent null).
       this.$nextTick(() => {
-        const el = document.getElementById('view-' + id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
         refreshIcons();
-        this.renderCharts();
+        requestAnimationFrame(() => this.renderCharts());
       });
     },
 
@@ -1919,6 +2011,127 @@ document.addEventListener('alpine:init', () => {
     },
 
     // ============================================================
+    // Asistente IA (agente con tool use)
+    // ============================================================
+    // Guarda la API key del proveedor (Groq) en este navegador. Solo local:
+    // nunca sale de aquí salvo hacia la API del LLM que el usuario eligió.
+    saveLlmConfig() {
+      localStorage.setItem('gd-llm-key', this.llmKey.trim());
+      localStorage.setItem('gd-llm-model', this.llmModel.trim() || 'llama-3.3-70b-versatile');
+      this.notify('Configuración del asistente guardada.');
+    },
+
+    clearChat() {
+      this.chatMessages = [];
+      this.chatError = '';
+    },
+
+    suggestChat(text) {
+      this.chatInput = text;
+      this.sendToAgent();
+    },
+
+    // Envía la pregunta del usuario al agente. El agente decide qué tools llamar;
+    // las tools de escritura mutan el estado y el dashboard se actualiza solo.
+    async sendToAgent() {
+      const message = (this.chatInput || '').trim();
+      if (!message || this.chatBusy) return;
+      if (!this.llmKey.trim()) {
+        this.chatError = 'Primero pega tu API key de Groq (gratis en console.groq.com/keys).';
+        return;
+      }
+      this.chatError = '';
+      this.chatInput = '';
+      this.chatMessages.push({ role: 'user', content: message });
+      this.chatBusy = true;
+      this.$nextTick(() => this._scrollChat());
+
+      try {
+        // El motor (bundle) se carga la primera vez que se usa, para no pesar
+        // en el arranque de la app ni romper el modo offline del resto.
+        const { runAgent, createLLMClient } = await import('./agent/engine.js');
+        if (!this._agentRepo) this._agentRepo = createBridge(this);
+
+        const client = createLLMClient({ apiKey: this.llmKey.trim() });
+
+        // Historial multi-turno: pasamos los turnos de texto previos (sin tools)
+        // para que el agente recuerde el contexto de la conversación.
+        const history = this.chatMessages
+          .filter((m) => (m.role === 'user' || m.role === 'assistant') && m.content)
+          .slice(0, -1) // sin el mensaje actual, que va como userMessage
+          .map((m) => ({ role: m.role, content: m.content }));
+
+        const answer = await runAgent(message, {
+          client,
+          repo: this._agentRepo,
+          tools: gastosTools,
+          systemPrompt: GASTOS_SYSTEM_PROMPT,
+          history,
+          model: this.llmModel.trim() || 'llama-3.3-70b-versatile',
+        });
+
+        this.chatMessages.push({ role: 'assistant', content: answer });
+        if (this.speakReplies) this.speak(answer);   // leer en voz alta si está activo
+      } catch (err) {
+        const msg = err?.message || String(err);
+        this.chatError = `No se pudo completar la consulta: ${msg}`;
+        this.chatMessages.push({
+          role: 'assistant',
+          content: 'Lo siento, hubo un problema al procesar tu consulta. Revisa tu API key y tu conexión.',
+        });
+      } finally {
+        this.chatBusy = false;
+        this.$nextTick(() => { refreshIcons(); this._scrollChat(); });
+      }
+    },
+
+    _scrollChat() {
+      const el = document.getElementById('chat-scroll');
+      if (el) el.scrollTop = el.scrollHeight;
+    },
+
+    // ============================================================
+    // Voz — Web Speech API (leer respuestas en voz alta)
+    // ============================================================
+    // Nativo del navegador, cero librerías. Degrada con elegancia: si el
+    // navegador no soporta SpeechSynthesis, speakSupported es false y la UI
+    // oculta el botón, así que nunca rompe nada. (El dictado por micrófono se
+    // retiró porque Chrome lo procesa en la nube y requería internet.)
+    get speakSupported() {
+      return typeof window !== 'undefined' && 'speechSynthesis' in window;
+    },
+
+    // Reusa el locale de la app (es-ES, es-CO, en-US…) para leer bien.
+    _speechLang() {
+      return (this.state && this.state.settings && this.state.settings.locale) || 'es-ES';
+    },
+
+    // Lee un texto en voz alta (respuesta del agente). Cancela lo anterior para
+    // no encolar audios si llegan varias respuestas seguidas.
+    speak(text) {
+      if (!this.speakSupported || !text) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(String(text));
+        u.lang = this._speechLang();
+        u.rate = 1;
+        window.speechSynthesis.speak(u);
+      } catch (_e) {}
+    },
+
+    stopSpeaking() {
+      if (this.speakSupported) { try { window.speechSynthesis.cancel(); } catch (_e) {} }
+    },
+
+    // Toggle: que el asistente lea sus respuestas en voz alta (se recuerda).
+    toggleSpeakReplies() {
+      this.speakReplies = !this.speakReplies;
+      localStorage.setItem('gd-speak-replies', this.speakReplies ? '1' : '0');
+      if (!this.speakReplies) this.stopSpeaking();
+      this.$nextTick(refreshIcons);
+    },
+
+    // ============================================================
     // Persistencia central (guardar + undo) y actividad
     // ============================================================
     // Guarda el estado actual. Antes de persistir, empuja al historial de
@@ -2046,8 +2259,8 @@ document.addEventListener('alpine:init', () => {
         const g = document.getElementById(id)?.getContext('2d');
         if (!g) return null;
         const grad = g.createLinearGradient(0, 0, 0, 260);
-        grad.addColorStop(0, `rgba(${accentRgb}, .35)`);
-        grad.addColorStop(1, `rgba(${accentRgb}, 0)`);
+        grad.addColorStop(0, `rgb(${accentRgb} / .35)`);
+        grad.addColorStop(1, `rgb(${accentRgb} / 0)`);
         return grad;
       })('chart-overview');
       const expGrad = ((id) => {
@@ -2080,8 +2293,8 @@ document.addEventListener('alpine:init', () => {
         const g = document.getElementById(id)?.getContext('2d');
         if (!g) return null;
         const grad = g.createLinearGradient(0, 0, 0, 260);
-        grad.addColorStop(0, `rgba(${accentRgb}, .3)`);
-        grad.addColorStop(1, `rgba(${accentRgb}, 0)`);
+        grad.addColorStop(0, `rgb(${accentRgb} / .3)`);
+        grad.addColorStop(1, `rgb(${accentRgb} / 0)`);
         return grad;
       })('patrimonioChart');
       this._chart('patrimonioChart', 'line', {
@@ -2143,7 +2356,7 @@ document.addEventListener('alpine:init', () => {
       this._chart('chart-ivg', 'bar', {
         labels: rs.map((m) => m.label),
         datasets: [
-          { label: 'Ingresos', data: rs.map((m) => m.income), backgroundColor: `rgba(${accentRgb}, .85)`, borderRadius: 8, borderSkipped: false },
+          { label: 'Ingresos', data: rs.map((m) => m.income), backgroundColor: `rgb(${accentRgb} / .85)`, borderRadius: 8, borderSkipped: false },
           { label: 'Gastos', data: rs.map((m) => m.expenses), backgroundColor: 'rgba(244, 63, 94, .85)', borderRadius: 8, borderSkipped: false },
         ],
       }, {
@@ -2162,8 +2375,8 @@ document.addEventListener('alpine:init', () => {
             const g = document.getElementById('chart-evo')?.getContext('2d');
             if (!g) return 'transparent';
             const grad = g.createLinearGradient(0, 0, 0, 260);
-            grad.addColorStop(0, `rgba(${accentRgb}, .3)`);
-            grad.addColorStop(1, `rgba(${accentRgb}, 0)`);
+            grad.addColorStop(0, `rgb(${accentRgb} / .3)`);
+            grad.addColorStop(1, `rgb(${accentRgb} / 0)`);
             return grad;
           })(),
           fill: true, tension: 0.45, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: `rgb(${accentRgb})`,
@@ -2218,3 +2431,22 @@ document.addEventListener('alpine:init', () => {
     };
   });
 });
+
+// Inyecta cada vista de /views en su <div data-partial="…"> antes de arrancar Alpine.
+async function loadPartials() {
+  const mounts = [...document.querySelectorAll('[data-partial]')];
+  await Promise.all(mounts.map(async (el) => {
+    const name = el.getAttribute('data-partial');
+    try {
+      const res = await fetch(`views/${name}.html`, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      el.outerHTML = await res.text();
+    } catch (err) {
+      console.error(`[views] No se pudo cargar la vista "${name}":`, err);
+      el.outerHTML = `<section id="view-${name}" class="card text-sm text-rose-500">No se pudo cargar esta sección (${name}).</section>`;
+    }
+  }));
+}
+
+// Precargar almacén (IndexedDB) y ensamblar vistas; recién entonces arrancar Alpine.
+Promise.all([initStorage(), loadPartials()]).then(() => window.Alpine.start());

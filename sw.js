@@ -1,12 +1,7 @@
-/* GastosDiarios — Service Worker (PWA / offline).
- * Estrategia:
- *  - Precarga la "shell" de la app (app shell) en `install`.
- *  - Mismo origen: cache-first con actualización en segundo plano.
- *  - CDN (Tailwind/Lucide/Chart.js/Alpine): stale-while-revalidate.
- *  - Si la red falla, cae a la copia en caché (offline).
- * La versión de la caché se sube al cambiar la app para invalidar viejas copias.
- */
-const VERSION = 'v3.4.0';
+/* Service Worker (PWA): cache-first para recursos de mismo origen, con
+ * actualización en segundo plano y fallback offline. La API del agente es
+ * externa y nunca se cachea. Sube VERSION al cambiar la app para invalidar cachés. */
+const VERSION = 'v3.9.6';
 const CACHE = `gastosdiarios-${VERSION}`;
 
 const APP_SHELL = [
@@ -15,6 +10,10 @@ const APP_SHELL = [
   './manifest.webmanifest',
   './styles/main.css',
   './icons/icon.svg',
+  './icons/icon-maskable.svg',
+  './icons/icon-192.png',
+  './icons/icon-maskable-192.png',
+  './icons/apple-touch-icon.png',
   './src/app.js',
   './src/storage.js',
   './src/migrations.js',
@@ -25,15 +24,33 @@ const APP_SHELL = [
   './src/categories.js',
   './src/stats.js',
   './src/db.js',
-];
-
-const CDN_PREFIXES = [
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/lucide',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://unpkg.com/alpinejs',
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
+  './src/agent/bridge.js',
+  './src/agent/tools.js',
+  './src/agent/systemPrompt.js',
+  // Vistas modulares (parciales HTML cargados en runtime por app.js → loadPartials)
+  './views/inicio.html',
+  './views/cuentas.html',
+  './views/movimientos.html',
+  './views/presupuestos.html',
+  './views/reportes.html',
+  './views/metas.html',
+  './views/deudas.html',
+  './views/patrimonio.html',
+  './views/calendario.html',
+  './views/recurrentes.html',
+  './views/categorias.html',
+  './views/asistente.html',
+  './views/config.html',
+  // Librerías vendorizadas (antes CDN): ahora offline de verdad.
+  './vendor/tailwind.js',
+  './vendor/lucide.min.js',
+  './vendor/chart.umd.min.js',
+  './vendor/alpine.esm.js',
+  './vendor/inter.css',
+  './vendor/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2',
+  './vendor/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2',
+  // engine.js (el bundle del agente) NO se precarga: es grande y solo se usa
+  // al abrir el Asistente. Se cachea bajo demanda la primera vez (fetch handler).
 ];
 
 self.addEventListener('install', (event) => {
@@ -51,10 +68,6 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim())
   );
 });
-
-function isCDN(url) {
-  return CDN_PREFIXES.some((p) => url.startsWith(p));
-}
 
 // Actualiza en segundo plano la copia en caché si la red lo permite.
 async function putInCache(request, response) {
@@ -80,9 +93,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Solo cachear recursos locales y CDN conocidos; el resto va a red.
+  // Solo cachear recursos de mismo origen; lo externo (API del agente) va a red.
   const sameOrigin = url.origin === self.location.origin;
-  if (!sameOrigin && !isCDN(url.href)) return;
+  if (!sameOrigin) return;
 
   // Cache-first con refresh en segundo plano.
   event.respondWith(

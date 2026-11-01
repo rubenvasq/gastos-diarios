@@ -1,0 +1,248 @@
+<template x-if="showConfig">
+<section x-cloak class="space-y-6 max-w-3xl">
+          <div class="flex items-center gap-3">
+            <button @click="closeConfig" class="btn-icon shrink-0" title="Volver">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Configuración</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Preferencias y administración de tus datos.</p>
+            </div>
+          </div>
+
+          <!-- Apariencia -->
+          <div class="card space-y-6">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-accent"></i> Apariencia</h3>
+
+            <div>
+              <span class="form-label">Color de acento</span>
+              <div class="flex flex-wrap gap-2.5">
+                <template x-for="p in config.accentPresets" :key="p.value">
+                  <button @click="accent = p.value" :title="p.name"
+                    class="w-9 h-9 rounded-full transition ring-offset-2 ring-offset-white dark:ring-offset-slate-900 hover:scale-110"
+                    :class="accent === p.value ? 'ring-2' : ''"
+                    :style="`background:${p.value}; --tw-ring-color:${p.value}`"></button>
+                </template>
+                <label class="w-9 h-9 rounded-full grid place-items-center border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer text-slate-400 hover:text-accent hover:border-accent transition" title="Color personalizado">
+                  <i data-lucide="pipette" class="w-4 h-4"></i>
+                  <input type="color" x-model="accent" class="sr-only">
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <span class="form-label">Tema</span>
+              <div class="grid grid-cols-3 gap-2">
+                <template x-for="m in [{v:'light',i:'sun',t:'Claro'},{v:'dark',i:'moon',t:'Oscuro'},{v:'system',i:'monitor',t:'Sistema'}]" :key="m.v">
+                  <button @click="mode = m.v"
+                    class="flex flex-col items-center gap-1.5 py-3 rounded-2xl border text-xs font-medium transition"
+                    :class="mode === m.v ? 'border-accent bg-accent/10 text-accent' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <i :data-lucide="m.i" class="w-5 h-5"></i>
+                    <span x-text="m.t"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard -->
+          <div class="card space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="font-bold flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4 text-accent"></i> Dashboard</h3>
+              <button @click="resetWidgets" class="text-xs font-semibold text-accent hover:underline">Restablecer widgets</button>
+            </div>
+            <p class="text-sm text-slate-400">Elige qué secciones se muestran en el inicio. Se guarda automáticamente.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <template x-for="w in widgetDefs" :key="w.id">
+                <button @click="toggleWidget(w.id)"
+                  class="flex items-center gap-3 px-3.5 py-3 rounded-2xl border text-sm font-medium transition"
+                  :class="widgetOn(w.id) ? 'border-accent/40 bg-accent/5 text-slate-700 dark:text-slate-200' : 'border-slate-200 dark:border-slate-700 text-slate-400'">
+                  <i :data-lucide="w.icon" class="w-4 h-4" :class="widgetOn(w.id) ? 'text-accent' : ''"></i>
+                  <span class="flex-1 text-left" x-text="w.label"></span>
+                  <span class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition"
+                    :class="widgetOn(w.id) ? 'bg-accent' : 'bg-slate-200 dark:bg-slate-700'">
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                      :class="widgetOn(w.id) ? 'translate-x-5' : ''"></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Preferencias -->
+          <div class="card space-y-5">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-accent"></i> Preferencias</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="form-label">Moneda principal</label>
+                <select class="field text-sm" :value="state.settings.currency" @change="setCurrency($event.target.value)">
+                  <option value="COP">COP — Peso colombiano</option>
+                  <option value="MXN">MXN — Peso mexicano</option>
+                  <option value="USD">USD — Dólar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="PEN">PEN — Sol peruano</option>
+                  <option value="CLP">CLP — Peso chileno</option>
+                  <option value="ARS">ARS — Peso argentino</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Idioma</label>
+                <select class="field text-sm" :value="state.settings.locale" @change="setLocale($event.target.value)">
+                  <option value="es-CO">Español (Colombia)</option>
+                  <option value="es-MX">Español (México)</option>
+                  <option value="es-ES">Español (España)</option>
+                  <option value="en-US">English (US)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Formato de fecha</label>
+                <select class="field text-sm" :value="state.settings.dateFormat" @change="setDateFormat($event.target.value)">
+                  <option value="dd/mm/yyyy">DD/MM/AAAA</option>
+                  <option value="mm/dd/yyyy">MM/DD/AAAA</option>
+                  <option value="yyyy-mm-dd">AAAA-MM-DD</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Presupuesto mensual</label>
+              <div class="flex items-center gap-3">
+                <input type="range" min="0" max="10000000" step="100000" :value="state.budget" @input="setBudget($event.target.value)" class="flex-1 accent-emerald-500">
+                <input type="number" min="0" step="10000" :value="state.budget" @change="setBudget($event.target.value)" class="w-40 field text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos -->
+          <div class="card space-y-4">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-accent"></i> Datos y respaldo</h3>
+            <p class="text-sm text-slate-400">Todos tus datos se guardan localmente en tu navegador. Crea respaldos periódicamente y revisa el historial de restauración.</p>
+            <p class="text-xs flex items-center gap-1.5" :class="lastBackupLabel ? 'text-slate-500 dark:text-slate-400' : 'text-amber-500'">
+              <i :data-lucide="lastBackupLabel ? 'check-circle-2' : 'alert-circle'" class="w-3.5 h-3.5"></i>
+              <span x-text="lastBackupLabel ? ('Último respaldo: ' + lastBackupLabel) : 'Aún no hay respaldos. Crea uno ahora.'"></span>
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button @click="saveManualBackup" class="btn-ghost justify-center"><i data-lucide="hard-drive-download" class="w-4 h-4 text-accent"></i> Guardar respaldo ahora</button>
+              <button @click="analyzeData" class="btn-ghost justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Analizar datos</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button @click="doExport" class="btn-ghost justify-center"><i data-lucide="download" class="w-4 h-4 text-accent"></i> Exportar JSON</button>
+              <button @click="doExportCSV" class="btn-ghost justify-center"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-accent"></i> Exportar CSV</button>
+              <button @click="doExportMonthly" class="btn-ghost justify-center"><i data-lucide="file-text" class="w-4 h-4 text-accent"></i> Resumen mensual</button>
+            </div>
+
+            <div>
+              <label class="btn-ghost justify-center w-full cursor-pointer">
+                <i data-lucide="upload" class="w-4 h-4 text-accent"></i> Importar backup (JSON)
+                <input type="file" accept=".json" class="hidden" @change="doImport">
+              </label>
+              <p class="text-xs text-slate-400 mt-1.5 text-center">La importación reemplazará tus datos actuales.</p>
+            </div>
+
+            <!-- Historial de respaldos -->
+            <div x-show="backups.length" class="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-accent"></i> Historial de respaldos</span>
+                <span class="text-xs text-slate-400" x-text="backups.length + ' punto(s) de restauración'"></span>
+              </div>
+              <ul class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                <template x-for="b in backups" :key="b.id">
+                  <li class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 px-3 py-2.5">
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium truncate" x-text="b.label"></p>
+                      <p class="text-xs text-slate-400" x-text="b.createdAt.slice(0, 16).replace('T', ' ') + ' · ' + b.sizeLabel"></p>
+                    </div>
+                    <div class="flex gap-1.5 shrink-0">
+                      <button @click="restoreBackupFromHistory(b.id)" class="btn-icon w-8 h-8" title="Restaurar"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                      <button @click="deleteBackup(b.id)" class="btn-icon w-8 h-8" title="Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+              <p class="text-xs text-slate-400 mt-2">Antes de restaurar se crea automáticamente un respaldo de seguridad de tus datos actuales.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button @click="loadDemo" class="btn-ghost justify-center text-accent border-accent/30"><i data-lucide="sparkles" class="w-4 h-4"></i> Cargar datos de ejemplo</button>
+              <button @click="resetData" class="btn-ghost justify-center text-rose-500 border-rose-200 dark:border-rose-500/30"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restablecer todo</button>
+            </div>
+          </div>
+
+          <div class="card space-y-3">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-accent"></i> Actividad reciente</h3>
+            <template x-if="activityLog.length === 0">
+              <p class="text-sm text-slate-400">Aún no hay actividad registrada.</p>
+            </template>
+            <ul class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+              <template x-for="a in activityLog" :key="a.id">
+                <li class="flex items-start gap-3">
+                  <span class="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" :class="activityDot(a.type)"></span>
+                  <div class="min-w-0">
+                    <p class="text-sm text-slate-600 dark:text-slate-300 leading-snug" x-text="a.text"></p>
+                    <p class="text-xs text-slate-400" x-text="formatDateTime(a.timestamp)"></p>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <div class="card bg-slate-50 dark:bg-slate-800/40 border-dashed space-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <p class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-accent"></i> Tus datos nunca salen de tu dispositivo.</p>
+            <p class="flex items-center gap-2"><i data-lucide="info" class="w-4 h-4 text-accent"></i> Personalización avanzada: edita <code class="text-accent font-mono">theme.config.js</code> y <code class="text-accent font-mono">src/categories.js</code>.</p>
+          </div>
+
+          <!-- Privacidad -->
+          <div class="card space-y-5">
+            <h3 class="font-bold flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4 text-accent"></i> Privacidad y seguridad</h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="form-label">PIN de bloqueo (4 a 6 dígitos)</label>
+                <div class="flex gap-2">
+                  <input type="password" inputmode="numeric" maxlength="6" x-model="pinDraft" placeholder="••••" class="field flex-1" :disabled="state.privacy.pinEnabled">
+                  <button @click="setPin(!state.privacy.pinEnabled)" class="btn-ghost shrink-0"
+                    :class="state.privacy.pinEnabled ? 'text-rose-500' : 'text-accent'">
+                    <i :data-lucide="state.privacy.pinEnabled ? 'lock-open' : 'lock'" class="w-4 h-4"></i>
+                    <span x-text="state.privacy.pinEnabled ? 'Desactivar' : 'Activar'"></span>
+                  </button>
+                </div>
+                <p class="text-xs text-slate-400 mt-1.5">Al activarlo, la app se bloqueará tras el periodo de inactividad o al presionar «Bloquear ahora».</p>
+              </div>
+
+              <div x-show="state.privacy.pinEnabled">
+                <label class="form-label">Bloqueo automático tras</label>
+                <select x-model="state.privacy.autoLockMinutes" @change="_save" class="field">
+                  <option value="1">1 minuto</option>
+                  <option value="5">5 minutos</option>
+                  <option value="15">15 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                </select>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium">Ocultar montos</p>
+                  <p class="text-xs text-slate-400">Los montos se muestran como •••• hasta que los reveles.</p>
+                </div>
+                <button @click="toggleAmountsHidden" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition"
+                  :class="state.privacy.hideAmounts ? 'bg-accent' : 'bg-slate-200 dark:bg-slate-700'">
+                  <span class="inline-block w-5 h-5 transform rounded-full bg-white shadow transition"
+                    :class="state.privacy.hideAmounts ? 'translate-x-5' : 'translate-x-0.5'"></span>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium">Bloquear ahora</p>
+                  <p class="text-xs text-slate-400">Bloquea la pantalla con tu PIN inmediatamente.</p>
+                </div>
+                <button @click="lockNow" class="btn-ghost text-rose-500"><i data-lucide="lock" class="w-4 h-4"></i> Bloquear</button>
+              </div>
+            </div>
+          </div>
+        </section>
+</template>

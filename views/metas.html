@@ -1,0 +1,58 @@
+<template x-if="view === 'metas'">
+<section id="view-metas" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Metas</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Objetivos de ahorro y su progreso.</p>
+            </div>
+            <button @click="openGoalModal()" class="btn-primary hover:-translate-y-px">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva meta
+            </button>
+          </div>
+
+          <template x-if="goalList.length === 0">
+            <div class="card text-center py-12">
+              <i data-lucide="target" class="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3"></i>
+              <p class="text-sm text-slate-400 mb-1">Aún no tienes metas.</p>
+              <button @click="openGoalModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Crear la primera meta</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="g in goalList" :key="g.id">
+              <div class="col-span-12 md:col-span-6 xl:col-span-4 card p-5 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-10 h-10 rounded-2xl grid place-items-center shrink-0" :style="`background:${g.color}1a;color:${g.color}`">
+                      <i :data-lucide="g.icon" class="w-5 h-5"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-sm truncate" x-text="g.name"></p>
+                      <p class="text-xs text-slate-400" x-text="g.targetDate ? `Meta: ${formatDate(g.targetDate)}` : 'Sin fecha límite'"></p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button @click="openGoalModal(g)" class="btn-icon w-8 h-8" title="Editar meta"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteGoal(g)" class="btn-icon w-8 h-8 text-rose-400 hover:text-rose-500" title="Eliminar meta"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="text-slate-400" x-text="`${g.pct}% logrado`"></span>
+                    <span class="font-semibold tabular-nums" x-text="fmt(g.saved)"></span>
+                  </div>
+                  <div class="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500" :style="`width:${g.pct}%;background:${g.color}`"></div>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1.5" x-text="`Faltan ${fmt(Math.max(0, g.target - g.saved))} de ${fmt(g.target)}`"></p>
+                  <p class="text-xs mt-0.5" x-show="g.daysLeft != null" :class="g.daysLeft >= 0 ? 'text-slate-400' : 'text-amber-500'"
+                    x-text="g.daysLeft >= 0 ? `${g.daysLeft} día(s) restantes` : 'Fecha límite vencida'"></p>
+                </div>
+
+                <button @click="openGoalContribution(g)" class="w-full btn-ghost py-2 text-sm"><i data-lucide="coins" class="w-4 h-4 text-accent"></i> Aportar / Retirar</button>
+              </div>
+            </template>
+          </div>
+        </section>
+</template>

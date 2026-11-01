@@ -1,0 +1,119 @@
+<template x-if="view === 'asistente'">
+<section id="view-asistente" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-5 h-5 text-accent"></i> Asistente IA
+              </h2>
+              <p class="text-sm text-slate-400 mt-0.5">Pregúntale a tus datos y pídele acciones reales: "¿cuánto gasté en octubre?", "registra un gasto de 45000 en comida", "recuérdame pagar el arriendo".</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <!-- Toggle: leer las respuestas del agente en voz alta (SpeechSynthesis) -->
+              <button
+                x-show="speakSupported"
+                @click="toggleSpeakReplies()"
+                :class="speakReplies ? 'bg-accent/10 text-accent' : 'btn-ghost'"
+                class="text-sm inline-flex items-center gap-2 rounded-2xl px-3 py-2 transition"
+                :title="speakReplies ? 'Lectura en voz alta activada' : 'Leer respuestas en voz alta'">
+                <i :data-lucide="speakReplies ? 'volume-2' : 'volume-x'" class="w-4 h-4"></i>
+                <span class="hidden sm:inline" x-text="speakReplies ? 'Voz activada' : 'Leer en voz'"></span>
+              </button>
+              <button @click="clearChat()" x-show="chatMessages.length" class="btn-ghost text-sm inline-flex items-center gap-2">
+                <i data-lucide="eraser" class="w-4 h-4"></i> Nueva conversación
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuración del proveedor (Groq). La key queda solo en tu navegador. -->
+          <details class="card p-4" :open="!llmKey">
+            <summary class="cursor-pointer text-sm font-semibold flex items-center gap-2">
+              <i data-lucide="key-round" class="w-4 h-4 text-accent"></i>
+              Configuración del modelo
+              <span x-show="llmKey" class="text-xs font-normal text-emerald-500 ml-1">· key guardada</span>
+            </summary>
+            <div class="mt-4 grid grid-cols-12 gap-4">
+              <label class="col-span-12 sm:col-span-7 block">
+                <span class="form-label">API key de Groq (gratis, empieza con <code>gsk_</code>)</span>
+                <input type="password" x-model="llmKey" placeholder="gsk_..." class="field w-full" autocomplete="off" spellcheck="false">
+              </label>
+              <label class="col-span-12 sm:col-span-5 block">
+                <span class="form-label">Modelo</span>
+                <input type="text" x-model="llmModel" class="field w-full" spellcheck="false">
+              </label>
+              <div class="col-span-12 flex items-center justify-between gap-3 flex-wrap">
+                <p class="text-xs text-slate-400 flex items-center gap-1.5">
+                  <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                  Tu key se guarda solo en este navegador. En producción iría tras un backend. Consíguela en <span class="text-accent">console.groq.com/keys</span>.
+                </p>
+                <button @click="saveLlmConfig()" class="btn-primary">
+                  <i data-lucide="save" class="w-4 h-4"></i> Guardar
+                </button>
+              </div>
+            </div>
+          </details>
+
+          <!-- Chat -->
+          <div class="card p-0 overflow-hidden flex flex-col" style="height: min(70vh, 640px)">
+            <!-- Mensajes -->
+            <div id="chat-scroll" class="flex-1 overflow-y-auto p-4 space-y-4">
+              <!-- Estado vacío con sugerencias -->
+              <div x-show="!chatMessages.length" class="h-full grid place-items-center text-center px-4">
+                <div class="max-w-md space-y-4">
+                  <div class="w-14 h-14 rounded-3xl bg-accent/10 text-accent grid place-items-center mx-auto">
+                    <i data-lucide="sparkles" class="w-7 h-7"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold">¿En qué te ayudo con tus finanzas?</p>
+                    <p class="text-sm text-slate-400 mt-1">El asistente consulta y edita tus datos reales. Prueba:</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2 justify-center">
+                    <button @click="suggestChat('¿Cuánto gasté este mes?')" class="chip">¿Cuánto gasté este mes?</button>
+                    <button @click="suggestChat('¿En qué categoría gasto más este mes?')" class="chip">¿En qué gasto más?</button>
+                    <button @click="suggestChat('¿Cómo voy de presupuesto este mes?')" class="chip">¿Cómo voy de presupuesto?</button>
+                    <button @click="suggestChat('Dame un resumen de mi patrimonio')" class="chip">Mi patrimonio</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Burbujas -->
+              <template x-for="(m, i) in chatMessages" :key="i">
+                <div :class="m.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                  <div
+                    :class="m.role === 'user'
+                      ? 'bg-accent text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] text-sm shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] text-sm'">
+                    <p class="whitespace-pre-wrap leading-relaxed" x-text="m.content"></p>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Indicador "pensando" -->
+              <div x-show="chatBusy" class="flex justify-start">
+                <div class="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-slate-400 inline-flex items-center gap-2">
+                  <i data-lucide="loader-circle" class="w-4 h-4 animate-spin"></i> Pensando…
+                </div>
+              </div>
+            </div>
+
+            <!-- Error -->
+            <div x-show="chatError" x-cloak class="px-4 py-2 text-xs text-rose-500 bg-rose-500/10 border-t border-rose-500/20" x-text="chatError"></div>
+
+            <!-- Entrada -->
+            <form @submit.prevent="sendToAgent()" class="border-t border-slate-200/70 dark:border-slate-700/60 p-3 flex items-end gap-2">
+              <input
+                type="text"
+                x-model="chatInput"
+                :disabled="chatBusy"
+                placeholder="Escribe tu pregunta o acción…"
+                class="field flex-1"
+                autocomplete="off">
+              <button
+                type="submit"
+                :disabled="chatBusy || !chatInput.trim()"
+                class="shrink-0 w-11 h-11 rounded-2xl bg-accent text-white grid place-items-center shadow-lg shadow-accent/30 transition hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                <i data-lucide="send-horizontal" class="w-5 h-5"></i>
+              </button>
+            </form>
+          </div>
+        </section>
+</template>

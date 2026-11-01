@@ -1,0 +1,90 @@
+<template x-if="view === 'recurrentes'">
+<section id="view-recurrentes" x-cloak class="scroll-mt-24 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Pagos recurrentes</h2>
+              <p class="text-sm text-slate-400 mt-0.5">Suscripciones y pagos fijos. Al llegar la fecha, regístralos como gasto.</p>
+            </div>
+            <button @click="openRecModal()" class="btn-primary hover:-translate-y-px">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nuevo recurrente
+            </button>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <span class="chip" :class="pendingCount > 0 ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'">
+              <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i> <span x-text="pendingCount"></span> pendiente(s)
+            </span>
+            <span class="chip bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span x-text="upcomingCount"></span> próximos (7 días)
+            </span>
+            <span class="chip bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <i data-lucide="repeat" class="w-3.5 h-3.5"></i> <span x-text="recurringList.filter(r => r.rec.active).length"></span> activos
+            </span>
+          </div>
+
+          <template x-if="recurringList.length === 0">
+            <div class="card text-center py-16">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-3xl bg-slate-100 dark:bg-slate-800 grid place-items-center">
+                <i data-lucide="repeat" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
+              </div>
+              <p class="font-semibold">Sin pagos recurrentes</p>
+              <p class="text-sm text-slate-400 mt-1 mb-5">Registra tus suscripciones y pagos fijos para recordarlos cada mes.</p>
+              <button @click="openRecModal()" class="btn-ghost text-accent"><i data-lucide="plus" class="w-4 h-4"></i> Agregar recurrente</button>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-12 gap-5">
+            <template x-for="item in recurringList" :key="item.rec.id">
+              <div class="col-span-12 md:col-span-6 card">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-11 h-11 rounded-2xl grid place-items-center shrink-0"
+                    :class="item.pending ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-800'"
+                    :style="!item.pending ? `background:${item.cat.color}1a; color:${item.cat.color}` : ''">
+                    <i :data-lucide="item.pending ? 'bell-ring' : item.cat.icon" class="w-5 h-5"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold truncate" x-text="item.rec.name"></p>
+                    <p class="text-xs text-slate-400" x-text="`${item.cat.label} · ${item.acct.name}`"></p>
+                  </div>
+                  <span class="font-bold tabular-nums text-lg" x-text="fmt(item.rec.amount)"></span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                  <span class="chip bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <i data-lucide="repeat" class="w-3 h-3"></i> <span x-text="frequencyLabel(item.rec.frequency)"></span>
+                  </span>
+                  <span class="chip text-[11px]" :class="item.pending ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : item.rec.active ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'">
+                    <i :data-lucide="item.pending ? 'bell-ring' : item.rec.active ? 'calendar-check' : 'pause'" class="w-3 h-3"></i>
+                    <span x-text="item.pending ? '🔔 Pago pendiente' : item.rec.active ? `Próximo: ${formatDate(item.rec.nextDate)}` : 'Inactivo'"></span>
+                  </span>
+                  <template x-if="item.rec.active && !item.pending && item.daysUntil <= 7">
+                    <span class="chip bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 text-[11px]">
+                      <i data-lucide="clock" class="w-3 h-3"></i> <span x-text="item.daysUntil === 0 ? 'Hoy' : `${item.daysUntil} día(s)`"></span>
+                    </span>
+                  </template>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <template x-if="item.pending">
+                    <div class="flex gap-2">
+                      <button @click="registerRecurring(item)" class="inline-flex items-center gap-1.5 rounded-xl bg-accent text-white px-3 py-1.5 text-xs font-semibold transition hover:brightness-110 active:scale-95">
+                        <i data-lucide="circle-check" class="w-3.5 h-3.5"></i> Registrar gasto
+                      </button>
+                      <button @click="skipRecurring(item)" class="btn-ghost py-1.5 px-3 text-xs" title="Saltar este ciclo">
+                        <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i> Saltar
+                      </button>
+                    </div>
+                  </template>
+                  <div class="flex items-center gap-1 ml-auto">
+                    <button @click="toggleRecurring(item)" class="btn-icon w-8 h-8" :title="item.rec.active ? 'Desactivar' : 'Activar'">
+                      <i :data-lucide="item.rec.active ? 'pause' : 'play'" class="w-4 h-4"></i>
+                    </button>
+                    <button @click="openRecModal(item.rec)" class="btn-icon w-8 h-8" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                    <button @click="deleteRecurring(item)" class="btn-icon w-8 h-8 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10" title="Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+</template>
