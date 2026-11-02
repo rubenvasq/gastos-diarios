@@ -49,11 +49,22 @@ function rateLimited(ip) {
   return rec.count > RATE.max;
 }
 
+// Resuelve el valor de Access-Control-Allow-Origin. ALLOWED_ORIGIN puede ser '*',
+// un único origen, o una lista separada por comas (p.ej. producción + localhost).
+// Para que el navegador acepte la respuesta, debe devolverse el Origin exacto de la
+// petición cuando está en la lista.
+function resolveOrigin(allowedEnv, requestOrigin) {
+  const allowed = (allowedEnv || '*').split(',').map((s) => s.trim()).filter(Boolean);
+  if (allowed.includes('*')) return requestOrigin || '*';
+  if (requestOrigin && allowed.includes(requestOrigin)) return requestOrigin;
+  return allowed[0] || '*'; // no coincide: devolvemos el 1º (el navegador lo bloqueará)
+}
+
 export default {
   async fetch(request, env) {
-    const allowed = env.ALLOWED_ORIGIN || '*';
+    const origin = resolveOrigin(env.ALLOWED_ORIGIN, request.headers.get('Origin'));
     const reqHeaders = request.headers.get('Access-Control-Request-Headers');
-    const cors = corsHeaders(allowed, reqHeaders);
+    const cors = corsHeaders(origin, reqHeaders);
 
     // Preflight
     if (request.method === 'OPTIONS') {

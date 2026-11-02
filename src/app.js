@@ -21,6 +21,11 @@ window.Alpine = Alpine;
 // Pon aquí la URL de tu Worker + '/openai/v1', p.ej. 'https://gastos-ai.tusub.workers.dev/openai/v1'.
 const AI_PROXY_URL = 'https://gastos-ai.rubenale0825.workers.dev/openai/v1';
 
+// Cadena de modelos para fallback dinámico. En el tier gratis de Groq el límite de
+// tokens/min es POR modelo, así que al saturarse uno (429) reintentamos con el
+// siguiente, que tiene su propio cupo. El modelo elegido por el usuario va primero.
+const AI_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -2083,14 +2088,32 @@ document.addEventListener('alpine:init', () => {
           .slice(0, -1) // sin el mensaje actual, que va como userMessage
           .map((m) => ({ role: m.role, content: m.content }));
 
-        const answer = await runAgent(message, {
-          client,
-          repo: this._agentRepo,
-          tools: gastosTools,
-          systemPrompt: GASTOS_SYSTEM_PROMPT,
-          history,
-          model: this.llmModel.trim() || 'openai/gpt-oss-120b',
-        });
+        // Modelo elegido primero; el resto de AI_MODELS como respaldo (dedup).
+        const primary = this.llmModel.trim() || AI_MODELS[0];
+        const candidates = [primary, ...AI_MODELS.filter((m) => m !== primary)];
+
+        let answer;
+        let lastErr;
+        for (const model of candidates) {
+          try {
+            answer = await runAgent(message, {
+              client,
+              repo: this._agentRepo,
+              tools: gastosTools,
+              systemPrompt: GASTOS_SYSTEM_PROMPT,
+              history,
+              model,
+            });
+            break; // éxito: salimos del fallback
+          } catch (err) {
+            lastErr = err;
+            const status = err?.status ?? err?.response?.status;
+            const isRate = status === 429 || /rate limit|too many requests/i.test(err?.message || '');
+            // Solo rotamos de modelo ante un límite de tasa; otros errores se propagan.
+            if (!isRate) throw err;
+          }
+        }
+        if (answer === undefined) throw lastErr; // todos los modelos saturados
 
         this.chatMessages.push({ role: 'assistant', content: answer });
         if (this.speakReplies) this.speak(answer);   // leer en voz alta si está activo
