@@ -281,6 +281,15 @@ document.addEventListener('alpine:init', () => {
           }
         });
 
+      // Precarga de voces de TTS: getVoices() suele venir vacío al inicio y se
+      // puebla async; cacheamos al cargar para poder elegir una voz en español.
+      if (this.speakSupported) {
+        this._voices = window.speechSynthesis.getVoices();
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+          this._voices = window.speechSynthesis.getVoices();
+        });
+      }
+
       // Se muestra una sola vista a la vez (x-if), sin scroll-spy; la vista la fija goTo().
       this._setupShortcuts();
 
@@ -2151,6 +2160,22 @@ document.addEventListener('alpine:init', () => {
       return (this.state && this.state.settings && this.state.settings.locale) || 'es-ES';
     },
 
+    // Elige la mejor voz disponible para el idioma: coincidencia exacta (es-CO),
+    // luego cualquier variante del idioma (es-*), luego el idioma base (es). Si el
+    // sistema no tiene ninguna voz en español, devuelve null y se usa la por defecto.
+    _pickVoice(lang) {
+      const voices = this._voices && this._voices.length
+        ? this._voices
+        : (this.speakSupported ? window.speechSynthesis.getVoices() : []);
+      if (!voices.length) return null;
+      const want = (lang || 'es').toLowerCase();
+      const base = want.split('-')[0];
+      return voices.find((v) => v.lang.toLowerCase() === want)
+        || voices.find((v) => v.lang.toLowerCase().startsWith(base + '-'))
+        || voices.find((v) => v.lang.toLowerCase().startsWith(base))
+        || null;
+    },
+
     // Lee un texto en voz alta (respuesta del agente). Cancela lo anterior para
     // no encolar audios si llegan varias respuestas seguidas.
     speak(text) {
@@ -2159,6 +2184,8 @@ document.addEventListener('alpine:init', () => {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(String(text));
         u.lang = this._speechLang();
+        const voice = this._pickVoice(u.lang);   // asigna voz en español si existe
+        if (voice) u.voice = voice;
         u.rate = 1;
         window.speechSynthesis.speak(u);
       } catch (_e) {}
