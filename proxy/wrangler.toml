@@ -1,0 +1,12 @@
+name = "gastos-ai"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Origen permitido para CORS. '*' sirve para pruebas; en producción conviene
+# limitarlo a tu dominio de GitHub Pages para que solo tu sitio use el proxy.
+# (Para desarrollo local, vuelve temporalmente a "*".)
+[vars]
+ALLOWED_ORIGIN = "https://rubenvasq.github.io"
+
+# La API key de Groq NO va aquí. Se guarda como secret (encriptada) con:
+#   wrangler secret put GROQ_KEY

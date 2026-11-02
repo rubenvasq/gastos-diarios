@@ -14,6 +14,13 @@ import Alpine from '../vendor/alpine.esm.js';
 import { initStorage } from './db.js';
 window.Alpine = Alpine;
 
+// URL del proxy serverless (Cloudflare Worker) que guarda la API key de Groq del
+// lado servidor. Si está configurada, el asistente funciona para cualquier visitante
+// SIN pedirle su propia key (la key real nunca viaja al navegador). Si se deja vacía
+// (''), la app vuelve al modo "trae tu propia key" (el visitante la pega en la vista).
+// Pon aquí la URL de tu Worker + '/openai/v1', p.ej. 'https://gastos-ai.tusub.workers.dev/openai/v1'.
+const AI_PROXY_URL = 'https://gastos-ai.rubenale0825.workers.dev/openai/v1';
+
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -136,8 +143,19 @@ document.addEventListener('alpine:init', () => {
     chatInput: '',
     chatBusy: false,
     chatError: '',
+    aiProxy: AI_PROXY_URL,   // si no está vacío, el asistente usa el proxy (no pide key al visitante)
     llmKey: localStorage.getItem('gd-llm-key') || '',
-    llmModel: localStorage.getItem('gd-llm-model') || 'llama-3.3-70b-versatile',
+    // Modelos de Groq descatalogados (devuelven 404): se migran al default vigente.
+    llmModel: (() => {
+      const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+      const DEPRECATED = ['llama-3.3-70b-versatile', 'llama-3.1-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+      const saved = localStorage.getItem('gd-llm-model');
+      if (!saved || DEPRECATED.includes(saved)) {
+        localStorage.setItem('gd-llm-model', DEFAULT_MODEL);
+        return DEFAULT_MODEL;
+      }
+      return saved;
+    })(),
     _agentRepo: null,   // cache del puente sobre este componente
 
     // ---- Voz (Web Speech API): leer respuestas en voz alta ----
@@ -709,7 +727,7 @@ document.addEventListener('alpine:init', () => {
     askAgentAboutBriefing() {
       this.goTo('asistente');
       this.dismissBriefing();
-      if (this.llmKey.trim()) {
+      if (this.aiProxy || this.llmKey.trim()) {
         this.chatInput = 'Dame un resumen de mis finanzas de este mes y dime qué debería priorizar.';
         this.$nextTick(() => this.sendToAgent());
       }
@@ -2017,7 +2035,7 @@ document.addEventListener('alpine:init', () => {
     // nunca sale de aquí salvo hacia la API del LLM que el usuario eligió.
     saveLlmConfig() {
       localStorage.setItem('gd-llm-key', this.llmKey.trim());
-      localStorage.setItem('gd-llm-model', this.llmModel.trim() || 'llama-3.3-70b-versatile');
+      localStorage.setItem('gd-llm-model', this.llmModel.trim() || 'openai/gpt-oss-120b');
       this.notify('Configuración del asistente guardada.');
     },
 
@@ -2036,7 +2054,7 @@ document.addEventListener('alpine:init', () => {
     async sendToAgent() {
       const message = (this.chatInput || '').trim();
       if (!message || this.chatBusy) return;
-      if (!this.llmKey.trim()) {
+      if (!this.aiProxy && !this.llmKey.trim()) {
         this.chatError = 'Primero pega tu API key de Groq (gratis en console.groq.com/keys).';
         return;
       }
@@ -2052,7 +2070,11 @@ document.addEventListener('alpine:init', () => {
         const { runAgent, createLLMClient } = await import('./agent/engine.js');
         if (!this._agentRepo) this._agentRepo = createBridge(this);
 
-        const client = createLLMClient({ apiKey: this.llmKey.trim() });
+        // Con proxy: la key real vive en el Worker; mandamos una placeholder (el SDK
+        // exige apiKey no vacía) y apuntamos baseURL al proxy. Sin proxy: key del visitante.
+        const client = this.aiProxy
+          ? createLLMClient({ apiKey: 'proxy', baseURL: this.aiProxy })
+          : createLLMClient({ apiKey: this.llmKey.trim() });
 
         // Historial multi-turno: pasamos los turnos de texto previos (sin tools)
         // para que el agente recuerde el contexto de la conversación.
@@ -2067,7 +2089,7 @@ document.addEventListener('alpine:init', () => {
           tools: gastosTools,
           systemPrompt: GASTOS_SYSTEM_PROMPT,
           history,
-          model: this.llmModel.trim() || 'llama-3.3-70b-versatile',
+          model: this.llmModel.trim() || 'openai/gpt-oss-120b',
         });
 
         this.chatMessages.push({ role: 'assistant', content: answer });

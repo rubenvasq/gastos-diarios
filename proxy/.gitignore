@@ -1,0 +1,3 @@
+# Estado local de Wrangler (incluye account id/cache) — nunca al repo
+.wrangler/
+node_modules/

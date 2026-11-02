@@ -24,8 +24,10 @@
             </div>
           </div>
 
-          <!-- Configuración del proveedor (Groq). La key queda solo en tu navegador. -->
-          <details class="card p-4" :open="!llmKey">
+          <!-- Configuración del proveedor (Groq). Solo se muestra en modo "trae tu propia
+               key"; si hay un proxy configurado (aiProxy), la key vive en el servidor y el
+               visitante no necesita configurar nada. -->
+          <details class="card p-4" x-show="!aiProxy" :open="!llmKey">
             <summary class="cursor-pointer text-sm font-semibold flex items-center gap-2">
               <i data-lucide="key-round" class="w-4 h-4 text-accent"></i>
               Configuración del modelo
