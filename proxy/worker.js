@@ -25,13 +25,16 @@ const MAX_BODY_BYTES = 256 * 1024; // 256 KB por request
 const RATE = { windowMs: 60_000, max: 20 }; // 20 req/min por IP (aprox, por isolate)
 const hits = new Map();
 
-function corsHeaders(origin) {
+function corsHeaders(origin, reqHeaders) {
   return {
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    // Reflejamos los headers que el navegador pide en el preflight. El SDK de
+    // OpenAI añade headers propios (x-stainless-*), así que una lista fija los
+    // bloquearía. Si no viene la cabecera, caemos a los básicos.
+    'Access-Control-Allow-Headers': reqHeaders || 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
+    'Vary': 'Origin, Access-Control-Request-Headers',
   };
 }
 
@@ -49,7 +52,8 @@ function rateLimited(ip) {
 export default {
   async fetch(request, env) {
     const allowed = env.ALLOWED_ORIGIN || '*';
-    const cors = corsHeaders(allowed);
+    const reqHeaders = request.headers.get('Access-Control-Request-Headers');
+    const cors = corsHeaders(allowed, reqHeaders);
 
     // Preflight
     if (request.method === 'OPTIONS') {
