@@ -2,7 +2,7 @@
 
 Gestor de **finanzas personales** _local-first_: una PWA que funciona **sin conexión**, **sin backend** y **sin paso de compilación**, con un **asistente de IA** que responde preguntas consultando tus propios datos.
 
-**▶ Demo en vivo:** https://rubenvasq.github.io/gastos-diarios/
+**▶ Demo en vivo:** https://rubenvasq.github.io/Gastos-diarios/
 
 > Tus datos nunca salen de tu dispositivo: todo se guarda en el navegador (IndexedDB). La primera vez carga en línea; después funciona offline.
 
